@@ -47,7 +47,7 @@
         h1 { font-size: 18px; margin: 0; font-weight: 700; color: #000; }
         .date-time { font-size: 11px; color: #666; }
 
-        /* TABLE STYLING - MATCHING REFERENCE */
+        /* TABLE STYLING */
         table { width: 100%; border-collapse: collapse; margin-bottom: 20px; table-layout: fixed; border: 1px solid var(--border-color); }
         th { background: var(--header-bg); text-align: left; font-size: 10px; padding: 8px; border: 1px solid var(--border-color); text-transform: uppercase; }
         td { padding: 6px 8px; border: 1px solid var(--border-color); vertical-align: middle; font-size: 12px; }
@@ -61,9 +61,8 @@
         .choice { width: 34px; height: 34px; border-radius: 4px; border: 1px solid var(--border-color); display: flex; align-items: center; justify-content: center; margin: 0 auto; cursor: pointer; }
         .choice.yes.active { background: var(--success); border-color: var(--success); color: white; }
         .choice.no.active { background: var(--danger); border-color: var(--danger); color: white; }
-        .choice.active::after { font-weight: bold; }
-        .choice.yes.active::after { content: "YES"; font-size: 9px; }
-        .choice.no.active::after { content: "NO"; font-size: 9px; }
+        .choice.yes.active::after { content: "YES"; font-size: 9px; font-weight: bold; }
+        .choice.no.active::after { content: "NO"; font-size: 9px; font-weight: bold; }
 
         textarea { width: 100%; min-height: 35px; border: 1px solid var(--border-color); padding: 6px; font-family: inherit; resize: none; }
         .notes-box { border: 1px solid var(--border-color); padding: 10px; min-height: 120px; margin-top: 5px; border-radius: 4px; }
@@ -71,7 +70,7 @@
 
         /* PHOTOS */
         .photo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; margin-top: 20px; }
-        .photo-card { border: 1px solid var(--border-color); padding: 10px; text-align: center; }
+        .photo-card { border: 1px solid var(--border-color); padding: 10px; text-align: center; position: relative; }
         .photo-card img { width: 100%; height: 180px; object-fit: contain; background: #f9f9f9; }
         .photo-label { font-size: 10px; font-weight: bold; margin-top: 8px; }
 
@@ -100,12 +99,10 @@
         .pdf-mode textarea, .pdf-mode .btn-cam, .pdf-mode .btn-add-photo, .pdf-mode .btn-reset-img { display: none !important; }
         .pdf-mode .print-mirror { display: block !important; }
         
-        /* SIGNATURE GRID - AS PER IMAGE */
         .sig-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-top: auto; padding-top: 20px; }
         .sig-item { border-top: 1px solid #000; padding-top: 5px; }
         .sig-label { font-size: 9px; font-weight: bold; text-transform: uppercase; }
 
-        /* PDF SINGLE PHOTO SCALING */
         .pdf-mode .single-photo img { height: 120mm !important; width: 100%; object-fit: contain; }
     </style>
 </head>
@@ -142,9 +139,18 @@ const SCHEMA = [
     { t: "General / BOH Audit", r: [["GEN","Floor Clear of Dirt"],["GEN","Carpet Vacuumed"],["GEN","Windows Cleaned In/Out"],["GEN","Front Entrance Cleaned"],["GEN","Front Mat Hoovered"],["GEN","Bins Emptied"],["GEN","Cash Desk Clean/Tidy"],["BOH","Canteen Clean & Tidy"],["BOH","Toilets Clean & Tidy"],["BOH","Loading Area Clean/Tidy"],["BOH","Customer Collection Current"],["BOH","Open Stock Bubblewrapped"],["BOH","Repair Section Tidy/Current"]]}
 ];
 
-let state = { ticks: {}, notes: {}, main: {}, photos: [[],[],[],[],[]] };
-let activeLoc = null;
+// Persistent state object
+let state = { 
+    ticks: {}, 
+    notes: {}, 
+    main: {}, 
+    photos: [[],[],[],[],[]],
+    currentIdx: 0,
+    activeLoc: null 
+};
+
 let currentIdx = 0;
+let activeLoc = null;
 
 function build() {
     const cont = document.getElementById('app-container');
@@ -197,18 +203,34 @@ function build() {
     });
 }
 
+async function save() { 
+    state.currentIdx = currentIdx;
+    state.activeLoc = activeLoc;
+    await localforage.setItem('audit_2026_design_v1', state); 
+}
+
 function tap(s, r, isY) {
     state.ticks[`${s}-${r}`] = isY ? 'y' : 'n';
     document.getElementById(`y-${s}-${r}`).classList.toggle('active', isY);
     document.getElementById(`n-${s}-${r}`).classList.toggle('active', !isY);
+    
     if(!isY) { 
         activeLoc = {s, r, label: SCHEMA[s].r[r][1]}; 
-        document.getElementById('cameraInput').click(); 
+        // Force save BEFORE opening camera to handle browser crash/reload
+        save().then(() => {
+            document.getElementById('cameraInput').click(); 
+        });
+    } else {
+        save();
     }
-    save();
 }
 
-function manualPhoto(sIdx) { activeLoc = {s: sIdx, label: "Compliance"}; document.getElementById('cameraInput').click(); }
+function manualPhoto(sIdx) { 
+    activeLoc = {s: sIdx, label: "Compliance"}; 
+    save().then(() => {
+        document.getElementById('cameraInput').click(); 
+    });
+}
 
 document.getElementById('cameraInput').onchange = function(e) {
     if(!e.target.files[0]) return;
@@ -218,14 +240,20 @@ document.getElementById('cameraInput').onchange = function(e) {
         img.onload = () => {
             const canv = document.createElement('canvas');
             const ctx = canv.getContext('2d');
-            const MAX = 600; 
+            const MAX = 800; // Slightly higher res for production
             let w = img.width, h = img.height;
             if(w > h) { if(w > MAX){ h *= MAX/w; w = MAX; } }
             else { if(h > MAX){ w *= MAX/h; h = MAX; } }
             canv.width = w; canv.height = h;
             ctx.drawImage(img, 0, 0, w, h);
-            state.photos[activeLoc.s].push({src: canv.toDataURL('image/jpeg', 0.5), lab: activeLoc.label});
-            renderPhotos(activeLoc.s);
+            
+            // Ensure we have a valid target
+            const targetS = activeLoc ? activeLoc.s : 0;
+            const targetL = activeLoc ? activeLoc.label : "Photo";
+            
+            state.photos[targetS].push({src: canv.toDataURL('image/jpeg', 0.6), lab: targetL});
+            renderPhotos(targetS);
+            activeLoc = null; // Clear pending
             save();
         };
         img.src = f.target.result;
@@ -235,6 +263,7 @@ document.getElementById('cameraInput').onchange = function(e) {
 
 function renderPhotos(sIdx) {
     const g = document.getElementById(`grid-${sIdx}`);
+    if(!g) return;
     const count = state.photos[sIdx].length;
     g.classList.toggle('single-photo', count === 1);
     g.innerHTML = state.photos[sIdx].map((p, pIdx) => `
@@ -252,10 +281,11 @@ function removePhoto(sIdx, pIdx) {
 
 function sync(s,r) { state.notes[`${s}-${r}`] = document.getElementById(`note-${s}-${r}`).value; save(); }
 function syncMain(s) { state.main[s] = document.getElementById(`main-${s}`).value; save(); }
-function save() { localforage.setItem('audit_2026_design_v1', state); }
 
 function move(dir) {
     currentIdx = Math.max(0, Math.min(4, currentIdx + dir));
+    save(); // Persist the page index
+    
     document.querySelectorAll('.audit-section').forEach((s,i) => s.classList.toggle('active', i === currentIdx));
     document.getElementById('nextBtn').style.display = currentIdx === 4 ? 'none' : 'block';
     document.getElementById('shareBtn').style.display = currentIdx === 4 ? 'block' : 'none';
@@ -271,7 +301,6 @@ async function doPDF(force) {
         const text = document.getElementById(`main-${s}`).value;
         const mir = document.getElementById(`mir-main-${s}`);
         mir.innerText = text || "No additional notes recorded.";
-        mir.style.fontSize = text.length < 100 ? "16pt" : "12pt";
         
         const photoSheet = document.getElementById(`photo-sheet-${s}`);
         if (state.photos[s].length === 0) {
@@ -281,7 +310,8 @@ async function doPDF(force) {
         }
 
         SCHEMA[s].r.forEach((__, r) => { 
-            document.getElementById(`mir-${s}-${r}`).innerText = document.getElementById(`note-${s}-${r}`).value; 
+            const noteVal = document.getElementById(`note-${s}-${r}`).value;
+            document.getElementById(`mir-${s}-${r}`).innerText = noteVal; 
         });
     });
 
@@ -291,48 +321,62 @@ async function doPDF(force) {
     const opt = {
         margin: 0,
         filename: `Audit_Report_${Date.now()}.pdf`,
-        image: { type: 'jpeg', quality: 0.95 },
-        html2canvas: { scale: 1.5, useCORS: true, scrollY: 0 },
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true, scrollY: 0, letterRendering: true },
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
     };
 
     try {
-        if (!force && navigator.canShare) {
+        if (!force && navigator.canShare && navigator.userAgent.includes("Mobi")) {
             const blob = await html2pdf().set(opt).from(el).output('blob');
             const file = new File([blob], opt.filename, { type: 'application/pdf' });
             await navigator.share({ files: [file], title: 'Store Audit Report' });
         } else {
             await html2pdf().set(opt).from(el).save();
         }
-    } catch (err) { alert("PDF Error: " + err); } finally {
+    } catch (err) { 
+        console.error(err);
+        alert("PDF Generation Note: Use 'SAVE PDF' if sharing is unsupported on this browser."); 
+    } finally {
         document.querySelectorAll('.photo-sheet').forEach(p => p.style.display = 'flex');
         el.classList.remove('pdf-mode');
         document.getElementById('overlay').style.display = 'none';
     }
 }
 
-function reset() { if(confirm("Wipe all data?")) { localforage.clear().then(() => location.reload()); } }
+function reset() { if(confirm("Wipe all data and restart?")) { localforage.clear().then(() => location.reload()); } }
 
+// BOOTSTRAP APP
 build();
+
 localforage.getItem('audit_2026_design_v1').then(d => {
     if(d) {
         state = d;
+        // Restore row ticks
         Object.keys(d.ticks).forEach(k => {
             const [s,r] = k.split('-');
-            document.getElementById(`${d.ticks[k]}-${s}-${r}`).classList.add('active');
+            const btn = document.getElementById(`${d.ticks[k]}-${s}-${r}`);
+            if(btn) btn.classList.add('active');
         });
+        // Restore row notes
         Object.keys(d.notes).forEach(k => {
-            document.getElementById(`note-${k}`).value = d.notes[k];
-            document.getElementById(`mir-${k}`).innerText = d.notes[k];
+            const area = document.getElementById(`note-${k}`);
+            if(area) area.value = d.notes[k];
         });
+        // Restore section notes
         Object.keys(d.main).forEach(k => {
-            document.getElementById(`main-${k}`).value = d.main[k];
-            document.getElementById(`mir-main-${k}`).innerText = d.main[k];
+            const area = document.getElementById(`main-${k}`);
+            if(area) area.value = d.main[k];
         });
+        // Restore navigation position
+        if(d.currentIdx !== undefined) currentIdx = d.currentIdx;
+        // Restore pending photo context
+        if(d.activeLoc !== undefined) activeLoc = d.activeLoc;
+
         d.photos.forEach((_,i) => renderPhotos(i));
     }
+    move(0);
 });
-move(0);
 </script>
 </body>
 </html>
