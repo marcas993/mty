@@ -24,7 +24,6 @@
             margin: 0; padding: 0; background: #f0f2f5; color: var(--text-main); font-size: 14px; padding-bottom: 110px;
         }
 
-        /* APP INTERFACE */
         .app-header {
             background: var(--primary); color: white; padding: 12px 16px;
             display: flex; justify-content: space-between; align-items: center;
@@ -47,7 +46,6 @@
         h1 { font-size: 18px; margin: 0; font-weight: 700; color: #000; }
         .date-time { font-size: 11px; color: #666; }
 
-        /* TABLE STYLING */
         table { width: 100%; border-collapse: collapse; margin-bottom: 20px; table-layout: fixed; border: 1px solid var(--border-color); }
         th { background: var(--header-bg); text-align: left; font-size: 10px; padding: 8px; border: 1px solid var(--border-color); text-transform: uppercase; }
         td { padding: 6px 8px; border: 1px solid var(--border-color); vertical-align: middle; font-size: 12px; }
@@ -57,7 +55,6 @@
         .col-check { width: 8%; text-align: center; font-weight: bold; }
         .col-action { width: 24%; }
 
-        /* CONTROLS */
         .choice { width: 34px; height: 34px; border-radius: 4px; border: 1px solid var(--border-color); display: flex; align-items: center; justify-content: center; margin: 0 auto; cursor: pointer; }
         .choice.yes.active { background: var(--success); border-color: var(--success); color: white; }
         .choice.no.active { background: var(--danger); border-color: var(--danger); color: white; }
@@ -68,7 +65,6 @@
         .notes-box { border: 1px solid var(--border-color); padding: 10px; min-height: 120px; margin-top: 5px; border-radius: 4px; }
         .print-mirror { display: none; white-space: pre-wrap; word-wrap: break-word; line-height: 1.4; }
 
-        /* PHOTOS */
         .photo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; margin-top: 20px; }
         .photo-card { border: 1px solid var(--border-color); padding: 10px; text-align: center; position: relative; }
         .photo-card img { width: 100%; height: 180px; object-fit: contain; background: #f9f9f9; }
@@ -77,7 +73,6 @@
         .single-photo .photo-card { width: 100%; border: none; }
         .single-photo img { height: 350px; }
 
-        /* NAVIGATION */
         .nav-bar { position: fixed; bottom: 0; left: 0; right: 0; background: #fff; padding: 15px; display: flex; justify-content: space-between; border-top: 1px solid #ddd; z-index: 1000; }
         .btn-nav { padding: 12px 24px; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; flex: 1; }
         .btn-prev { background: #eee; color: #333; max-width: 100px; }
@@ -86,7 +81,7 @@
 
         #overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); color: white; z-index: 2000; display: none; flex-direction: column; align-items: center; justify-content: center; }
 
-        /* PDF OUTPUT STYLES */
+        /* PDF STYLES */
         .pdf-mode { width: 210mm !important; }
         .pdf-mode .audit-section { display: block !important; }
         .pdf-mode .sheet {
@@ -102,7 +97,6 @@
         .sig-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-top: auto; padding-top: 20px; }
         .sig-item { border-top: 1px solid #000; padding-top: 5px; }
         .sig-label { font-size: 9px; font-weight: bold; text-transform: uppercase; }
-
         .pdf-mode .single-photo img { height: 120mm !important; width: 100%; object-fit: contain; }
     </style>
 </head>
@@ -111,7 +105,7 @@
 <input type="file" id="cameraInput" accept="image/*" capture="environment" style="display:none">
 <div id="overlay">
     <div style="font-size: 20px; font-weight: bold;">GENERATING REPORT</div>
-    <div style="font-size: 12px; margin-top:10px;">Applying Professional Design...</div>
+    <div style="font-size: 12px; margin-top:10px;">Please wait...</div>
 </div>
 
 <div class="app-header">
@@ -139,7 +133,7 @@ const SCHEMA = [
     { t: "General / BOH Audit", r: [["GEN","Floor Clear of Dirt"],["GEN","Carpet Vacuumed"],["GEN","Windows Cleaned In/Out"],["GEN","Front Entrance Cleaned"],["GEN","Front Mat Hoovered"],["GEN","Bins Emptied"],["GEN","Cash Desk Clean/Tidy"],["BOH","Canteen Clean & Tidy"],["BOH","Toilets Clean & Tidy"],["BOH","Loading Area Clean/Tidy"],["BOH","Customer Collection Current"],["BOH","Open Stock Bubblewrapped"],["BOH","Repair Section Tidy/Current"]]}
 ];
 
-// Persistent state object
+// Global state tracking
 let state = { 
     ticks: {}, 
     notes: {}, 
@@ -148,9 +142,6 @@ let state = {
     currentIdx: 0,
     activeLoc: null 
 };
-
-let currentIdx = 0;
-let activeLoc = null;
 
 function build() {
     const cont = document.getElementById('app-container');
@@ -173,20 +164,18 @@ function build() {
             <div class="audit-section" id="sec-${sIdx}">
                 <div class="sheet">
                     <div class="header-row">
-                        <div><h1>${sec.t}</h1></div>
+                        <h1>${sec.t}</h1>
                         <div class="date-time dt-target"></div>
                     </div>
                     <table>
                         <thead><tr><th>CAT</th><th>CHECKPOINT</th><th style="text-align:center">V</th><th style="text-align:center">N</th><th>ACTION / NOTES</th></tr></thead>
                         <tbody>${rows}</tbody>
                     </table>
-                    
                     <div class="sig-label">SECTION NOTES:</div>
                     <div class="notes-box">
                         <textarea id="main-${sIdx}" style="min-height: 100px; border:none;" oninput="syncMain(${sIdx})"></textarea>
                         <div class="print-mirror" id="mir-main-${sIdx}"></div>
                     </div>
-
                     <div class="sig-grid">
                         <div class="sig-item"><div class="sig-label">Staff Sign Off</div></div>
                         <div class="sig-item"><div class="sig-label">Duty Manager</div></div>
@@ -203,10 +192,9 @@ function build() {
     });
 }
 
+// Atomic persistence
 async function save() { 
-    state.currentIdx = currentIdx;
-    state.activeLoc = activeLoc;
-    await localforage.setItem('audit_2026_design_v1', state); 
+    await localforage.setItem('audit_2026_mty_v2', state); 
 }
 
 function tap(s, r, isY) {
@@ -215,21 +203,16 @@ function tap(s, r, isY) {
     document.getElementById(`n-${s}-${r}`).classList.toggle('active', !isY);
     
     if(!isY) { 
-        activeLoc = {s, r, label: SCHEMA[s].r[r][1]}; 
-        // Force save BEFORE opening camera to handle browser crash/reload
-        save().then(() => {
-            document.getElementById('cameraInput').click(); 
-        });
+        state.activeLoc = {s, r, label: SCHEMA[s].r[r][1]}; 
+        save().then(() => { document.getElementById('cameraInput').click(); });
     } else {
         save();
     }
 }
 
 function manualPhoto(sIdx) { 
-    activeLoc = {s: sIdx, label: "Compliance"}; 
-    save().then(() => {
-        document.getElementById('cameraInput').click(); 
-    });
+    state.activeLoc = {s: sIdx, label: "Compliance"}; 
+    save().then(() => { document.getElementById('cameraInput').click(); });
 }
 
 document.getElementById('cameraInput').onchange = function(e) {
@@ -240,20 +223,20 @@ document.getElementById('cameraInput').onchange = function(e) {
         img.onload = () => {
             const canv = document.createElement('canvas');
             const ctx = canv.getContext('2d');
-            const MAX = 800; // Slightly higher res for production
+            const MAX = 800; 
             let w = img.width, h = img.height;
             if(w > h) { if(w > MAX){ h *= MAX/w; w = MAX; } }
             else { if(h > MAX){ w *= MAX/h; h = MAX; } }
             canv.width = w; canv.height = h;
             ctx.drawImage(img, 0, 0, w, h);
             
-            // Ensure we have a valid target
-            const targetS = activeLoc ? activeLoc.s : 0;
-            const targetL = activeLoc ? activeLoc.label : "Photo";
+            // Use the saved activeLoc to place the photo correctly
+            const sIdx = state.activeLoc ? state.activeLoc.s : 0;
+            const label = state.activeLoc ? state.activeLoc.label : "Photo";
             
-            state.photos[targetS].push({src: canv.toDataURL('image/jpeg', 0.6), lab: targetL});
-            renderPhotos(targetS);
-            activeLoc = null; // Clear pending
+            state.photos[sIdx].push({src: canv.toDataURL('image/jpeg', 0.6), lab: label});
+            state.activeLoc = null; // Clear context after success
+            renderPhotos(sIdx);
             save();
         };
         img.src = f.target.result;
@@ -283,12 +266,12 @@ function sync(s,r) { state.notes[`${s}-${r}`] = document.getElementById(`note-${
 function syncMain(s) { state.main[s] = document.getElementById(`main-${s}`).value; save(); }
 
 function move(dir) {
-    currentIdx = Math.max(0, Math.min(4, currentIdx + dir));
-    save(); // Persist the page index
+    state.currentIdx = Math.max(0, Math.min(4, state.currentIdx + dir));
+    save(); 
     
-    document.querySelectorAll('.audit-section').forEach((s,i) => s.classList.toggle('active', i === currentIdx));
-    document.getElementById('nextBtn').style.display = currentIdx === 4 ? 'none' : 'block';
-    document.getElementById('shareBtn').style.display = currentIdx === 4 ? 'block' : 'none';
+    document.querySelectorAll('.audit-section').forEach((s,i) => s.classList.toggle('active', i === state.currentIdx));
+    document.getElementById('nextBtn').style.display = state.currentIdx === 4 ? 'none' : 'block';
+    document.getElementById('shareBtn').style.display = state.currentIdx === 4 ? 'block' : 'none';
     window.scrollTo(0,0);
 }
 
@@ -298,20 +281,12 @@ async function doPDF(force) {
     document.querySelectorAll('.dt-target').forEach(el => el.innerText = timeStr);
 
     SCHEMA.forEach((_, s) => {
-        const text = document.getElementById(`main-${s}`).value;
-        const mir = document.getElementById(`mir-main-${s}`);
-        mir.innerText = text || "No additional notes recorded.";
-        
+        document.getElementById(`mir-main-${s}`).innerText = document.getElementById(`main-${s}`).value || "No additional notes recorded.";
         const photoSheet = document.getElementById(`photo-sheet-${s}`);
-        if (state.photos[s].length === 0) {
-            photoSheet.style.setProperty('display', 'none', 'important');
-        } else {
-            photoSheet.style.setProperty('display', 'flex', 'important');
-        }
+        photoSheet.style.setProperty('display', state.photos[s].length === 0 ? 'none' : 'flex', 'important');
 
         SCHEMA[s].r.forEach((__, r) => { 
-            const noteVal = document.getElementById(`note-${s}-${r}`).value;
-            document.getElementById(`mir-${s}-${r}`).innerText = noteVal; 
+            document.getElementById(`mir-${s}-${r}`).innerText = document.getElementById(`note-${s}-${r}`).value; 
         });
     });
 
@@ -320,63 +295,55 @@ async function doPDF(force) {
 
     const opt = {
         margin: 0,
-        filename: `Audit_Report_${Date.now()}.pdf`,
+        filename: `Audit_${Date.now()}.pdf`,
         image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true, scrollY: 0, letterRendering: true },
+        html2canvas: { scale: 2, useCORS: true, scrollY: 0 },
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
     };
 
     try {
-        if (!force && navigator.canShare && navigator.userAgent.includes("Mobi")) {
+        if (!force && navigator.canShare && /Mobi|Android/i.test(navigator.userAgent)) {
             const blob = await html2pdf().set(opt).from(el).output('blob');
             const file = new File([blob], opt.filename, { type: 'application/pdf' });
-            await navigator.share({ files: [file], title: 'Store Audit Report' });
+            await navigator.share({ files: [file], title: 'Store Audit' });
         } else {
             await html2pdf().set(opt).from(el).save();
         }
-    } catch (err) { 
-        console.error(err);
-        alert("PDF Generation Note: Use 'SAVE PDF' if sharing is unsupported on this browser."); 
-    } finally {
+    } catch (err) { alert("Download Note: Sharing might be restricted on some mobile browsers. Use 'SAVE PDF' instead."); } 
+    finally {
         document.querySelectorAll('.photo-sheet').forEach(p => p.style.display = 'flex');
         el.classList.remove('pdf-mode');
         document.getElementById('overlay').style.display = 'none';
     }
 }
 
-function reset() { if(confirm("Wipe all data and restart?")) { localforage.clear().then(() => location.reload()); } }
+function reset() { if(confirm("Wipe all data?")) { localforage.clear().then(() => location.reload()); } }
 
-// BOOTSTRAP APP
+// BOOTSTRAP
 build();
 
-localforage.getItem('audit_2026_design_v1').then(d => {
+localforage.getItem('audit_2026_mty_v2').then(d => {
     if(d) {
         state = d;
-        // Restore row ticks
         Object.keys(d.ticks).forEach(k => {
             const [s,r] = k.split('-');
-            const btn = document.getElementById(`${d.ticks[k]}-${s}-${r}`);
-            if(btn) btn.classList.add('active');
+            const tick = document.getElementById(`${d.ticks[k]}-${s}-${r}`);
+            if(tick) tick.classList.add('active');
         });
-        // Restore row notes
         Object.keys(d.notes).forEach(k => {
-            const area = document.getElementById(`note-${k}`);
-            if(area) area.value = d.notes[k];
+            const el = document.getElementById(`note-${k}`);
+            if(el) el.value = d.notes[k];
         });
-        // Restore section notes
         Object.keys(d.main).forEach(k => {
-            const area = document.getElementById(`main-${k}`);
-            if(area) area.value = d.main[k];
+            const el = document.getElementById(`main-${k}`);
+            if(el) el.value = d.main[k];
         });
-        // Restore navigation position
-        if(d.currentIdx !== undefined) currentIdx = d.currentIdx;
-        // Restore pending photo context
-        if(d.activeLoc !== undefined) activeLoc = d.activeLoc;
-
         d.photos.forEach((_,i) => renderPhotos(i));
     }
-    move(0);
+    // Initialize to the saved index (or 0 if new)
+    move(0); 
 });
 </script>
 </body>
 </html>
+
