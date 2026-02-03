@@ -8,92 +8,46 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/localforage/1.10.0/localforage.min.js"></script>
 
     <style>
-        :root {
-            --primary: #2c3e50;
-            --header-bg: #f2f2f2;
-            --border-color: #d1d1d1;
-            --text-main: #333;
-            --accent: #3498db;
-            --success: #2ecc71;
-            --danger: #e74c3c;
-        }
-
+        :root { --primary: #2c3e50; --header-bg: #f2f2f2; --border-color: #d1d1d1; --text-main: #333; --accent: #3498db; --success: #2ecc71; --danger: #e74c3c; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body {
-            font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-            margin: 0; padding: 0; background: #f0f2f5; color: var(--text-main); font-size: 14px; padding-bottom: 110px;
-        }
-
-        .app-header {
-            background: var(--primary); color: white; padding: 12px 16px;
-            display: flex; justify-content: space-between; align-items: center;
-            position: sticky; top: 0; z-index: 100;
-        }
+        body { font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; margin: 0; padding: 0; background: #f0f2f5; color: var(--text-main); font-size: 14px; padding-bottom: 110px; }
+        .app-header { background: var(--primary); color: white; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
         .btn-header { border: none; padding: 8px 12px; border-radius: 4px; font-size: 11px; font-weight: bold; cursor: pointer; color: white; text-transform: uppercase; }
         .btn-dl { background: var(--accent); } .btn-reset { background: var(--danger); }
-
         #app-container { width: 100%; max-width: 900px; margin: 0 auto; }
         .audit-section { display: none; }
         .audit-section.active { display: block; }
-
-        .sheet {
-            background: #fff; margin: 10px; padding: 25px;
-            border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            display: flex; flex-direction: column; min-height: 90vh;
-        }
-
+        .sheet { background: #fff; margin: 10px; padding: 25px; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); display: flex; flex-direction: column; min-height: 90vh; }
         .header-row { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; }
         h1 { font-size: 18px; margin: 0; font-weight: 700; color: #000; }
         .date-time { font-size: 11px; color: #666; }
-
         table { width: 100%; border-collapse: collapse; margin-bottom: 20px; table-layout: fixed; border: 1px solid var(--border-color); }
         th { background: var(--header-bg); text-align: left; font-size: 10px; padding: 8px; border: 1px solid var(--border-color); text-transform: uppercase; }
         td { padding: 6px 8px; border: 1px solid var(--border-color); vertical-align: middle; font-size: 12px; }
-        
-        .col-cat { width: 15%; font-weight: bold; }
-        .col-item { width: 45%; }
-        .col-check { width: 8%; text-align: center; font-weight: bold; }
-        .col-action { width: 24%; }
-
+        .col-cat { width: 15%; font-weight: bold; } .col-item { width: 45%; } .col-check { width: 8%; text-align: center; font-weight: bold; } .col-action { width: 24%; }
         .choice { width: 34px; height: 34px; border-radius: 4px; border: 1px solid var(--border-color); display: flex; align-items: center; justify-content: center; margin: 0 auto; cursor: pointer; }
         .choice.yes.active { background: var(--success); border-color: var(--success); color: white; }
         .choice.no.active { background: var(--danger); border-color: var(--danger); color: white; }
         .choice.yes.active::after { content: "YES"; font-size: 9px; font-weight: bold; }
         .choice.no.active::after { content: "NO"; font-size: 9px; font-weight: bold; }
-
         textarea { width: 100%; min-height: 35px; border: 1px solid var(--border-color); padding: 6px; font-family: inherit; resize: none; }
         .notes-box { border: 1px solid var(--border-color); padding: 10px; min-height: 120px; margin-top: 5px; border-radius: 4px; }
         .print-mirror { display: none; white-space: pre-wrap; word-wrap: break-word; line-height: 1.4; }
-
         .photo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; margin-top: 20px; }
         .photo-card { border: 1px solid var(--border-color); padding: 10px; text-align: center; position: relative; }
         .photo-card img { width: 100%; height: 180px; object-fit: contain; background: #f9f9f9; }
         .photo-label { font-size: 10px; font-weight: bold; margin-top: 8px; }
-
-        .single-photo .photo-card { width: 100%; border: none; }
-        .single-photo img { height: 350px; }
-
+        .single-photo .photo-card { width: 100%; border: none; } .single-photo img { height: 350px; }
         .nav-bar { position: fixed; bottom: 0; left: 0; right: 0; background: #fff; padding: 15px; display: flex; justify-content: space-between; border-top: 1px solid #ddd; z-index: 1000; }
         .btn-nav { padding: 12px 24px; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; flex: 1; }
-        .btn-prev { background: #eee; color: #333; max-width: 100px; }
-        .btn-next { background: var(--accent); color: white; margin-left: 10px; }
-        .btn-share { background: var(--success); color: white; margin-left: 10px; }
-
+        .btn-prev { background: #eee; color: #333; max-width: 100px; } .btn-next { background: var(--accent); color: white; margin-left: 10px; } .btn-share { background: var(--success); color: white; margin-left: 10px; }
         #overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); color: white; z-index: 2000; display: none; flex-direction: column; align-items: center; justify-content: center; }
-
-        /* PDF STYLES */
         .pdf-mode { width: 210mm !important; }
         .pdf-mode .audit-section { display: block !important; }
-        .pdf-mode .sheet {
-            width: 210mm !important; height: 296mm !important;
-            margin: 0 !important; padding: 15mm !important;
-            border-radius: 0 !important; box-shadow: none !important;
-            page-break-after: always !important; overflow: hidden !important;
-        }
+        .pdf-mode .sheet { width: 210mm !important; height: 296mm !important; margin: 0 !important; padding: 15mm !important; border-radius: 0 !important; box-shadow: none !important; page-break-after: always !important; overflow: hidden !important; }
         .pdf-mode .photo-sheet { page-break-before: always !important; }
         .pdf-mode textarea, .pdf-mode .btn-cam, .pdf-mode .btn-add-photo, .pdf-mode .btn-reset-img { display: none !important; }
         .pdf-mode .print-mirror { display: block !important; }
-        
         .sig-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-top: auto; padding-top: 20px; }
         .sig-item { border-top: 1px solid #000; padding-top: 5px; }
         .sig-label { font-size: 9px; font-weight: bold; text-transform: uppercase; }
@@ -105,7 +59,6 @@
 <input type="file" id="cameraInput" accept="image/*" capture="environment" style="display:none">
 <div id="overlay">
     <div style="font-size: 20px; font-weight: bold;">GENERATING REPORT</div>
-    <div style="font-size: 12px; margin-top:10px;">Please wait...</div>
 </div>
 
 <div class="app-header">
@@ -133,14 +86,37 @@ const SCHEMA = [
     { t: "General / BOH Audit", r: [["GEN","Floor Clear of Dirt"],["GEN","Carpet Vacuumed"],["GEN","Windows Cleaned In/Out"],["GEN","Front Entrance Cleaned"],["GEN","Front Mat Hoovered"],["GEN","Bins Emptied"],["GEN","Cash Desk Clean/Tidy"],["BOH","Canteen Clean & Tidy"],["BOH","Toilets Clean & Tidy"],["BOH","Loading Area Clean/Tidy"],["BOH","Customer Collection Current"],["BOH","Open Stock Bubblewrapped"],["BOH","Repair Section Tidy/Current"]]}
 ];
 
-// Global state tracking
-let state = { 
-    ticks: {}, 
-    notes: {}, 
-    main: {}, 
-    photos: [[],[],[],[],[]],
-    currentIdx: 0,
-    activeLoc: null 
+let state = { ticks: {}, notes: {}, main: {}, photos: [[],[],[],[],[]] };
+let currentIdx = 0;
+
+// Rule 1: Camera Listener Attached Immediately at Top Level
+document.getElementById('cameraInput').onchange = function(e) {
+    if(!e.target.files[0]) return;
+    
+    // Get target info from synchronous localStorage (bulletproof)
+    const pending = JSON.parse(localStorage.getItem('pending_photo') || '{"s":0, "lab":"Compliance"}');
+    
+    const reader = new FileReader();
+    reader.onload = (f) => {
+        const img = new Image();
+        img.onload = () => {
+            const canv = document.createElement('canvas');
+            const ctx = canv.getContext('2d');
+            const MAX = 800; 
+            let w = img.width, h = img.height;
+            if(w > h) { if(w > MAX){ h *= MAX/w; w = MAX; } }
+            else { if(h > MAX){ w *= MAX/h; h = MAX; } }
+            canv.width = w; canv.height = h;
+            ctx.drawImage(img, 0, 0, w, h);
+            
+            state.photos[pending.s].push({src: canv.toDataURL('image/jpeg', 0.6), lab: pending.lab});
+            renderPhotos(pending.s);
+            save();
+            localStorage.removeItem('pending_photo');
+        };
+        img.src = f.target.result;
+    };
+    reader.readAsDataURL(e.target.files[0]);
 };
 
 function build() {
@@ -159,119 +135,44 @@ function build() {
                 </td>
             </tr>`;
         });
-
-        cont.innerHTML += `
-            <div class="audit-section" id="sec-${sIdx}">
-                <div class="sheet">
-                    <div class="header-row">
-                        <h1>${sec.t}</h1>
-                        <div class="date-time dt-target"></div>
-                    </div>
-                    <table>
-                        <thead><tr><th>CAT</th><th>CHECKPOINT</th><th style="text-align:center">V</th><th style="text-align:center">N</th><th>ACTION / NOTES</th></tr></thead>
-                        <tbody>${rows}</tbody>
-                    </table>
-                    <div class="sig-label">SECTION NOTES:</div>
-                    <div class="notes-box">
-                        <textarea id="main-${sIdx}" style="min-height: 100px; border:none;" oninput="syncMain(${sIdx})"></textarea>
-                        <div class="print-mirror" id="mir-main-${sIdx}"></div>
-                    </div>
-                    <div class="sig-grid">
-                        <div class="sig-item"><div class="sig-label">Staff Sign Off</div></div>
-                        <div class="sig-item"><div class="sig-label">Duty Manager</div></div>
-                        <div class="sig-item"><div class="sig-label">Area Manager</div></div>
-                        <div class="sig-item"><div class="sig-label">Date</div></div>
-                    </div>
-                </div>
-                <div class="sheet photo-sheet" id="photo-sheet-${sIdx}">
-                    <div class="header-row"><h1>${sec.t.split(' ')[0]} Photos</h1><div class="date-time dt-target"></div></div>
-                    <button class="btn-add-photo" style="width:100%; padding:12px; background:var(--primary); color:white; border:none; cursor:pointer;" onclick="manualPhoto(${sIdx})">📷 ADD PHOTO</button>
-                    <div class="photo-grid" id="grid-${sIdx}"></div>
-                </div>
-            </div>`;
+        cont.innerHTML += `<div class="audit-section" id="sec-${sIdx}"><div class="sheet"><div class="header-row"><h1>${sec.t}</h1><div class="date-time dt-target"></div></div><table><thead><tr><th>CAT</th><th>CHECKPOINT</th><th style="text-align:center">V</th><th style="text-align:center">N</th><th>ACTION / NOTES</th></tr></thead><tbody>${rows}</tbody></table><div class="sig-label">SECTION NOTES:</div><div class="notes-box"><textarea id="main-${sIdx}" style="min-height:100px;border:none;" oninput="syncMain(${sIdx})"></textarea><div class="print-mirror" id="mir-main-${sIdx}"></div></div><div class="sig-grid"><div class="sig-item"><div class="sig-label">Staff Sign Off</div></div><div class="sig-item"><div class="sig-label">Duty Manager</div></div><div class="sig-item"><div class="sig-label">Area Manager</div></div><div class="sig-item"><div class="sig-label">Date</div></div></div></div><div class="sheet photo-sheet" id="photo-sheet-${sIdx}"><div class="header-row"><h1>${sec.t.split(' ')[0]} Photos</h1><div class="date-time dt-target"></div></div><button class="btn-add-photo" style="width:100%;padding:12px;background:var(--primary);color:white;border:none;cursor:pointer;" onclick="manualPhoto(${sIdx})">📷 ADD PHOTO</button><div class="photo-grid" id="grid-${sIdx}"></div></div></div>`;
     });
-}
-
-// Atomic persistence
-async function save() { 
-    await localforage.setItem('audit_2026_mty_v2', state); 
 }
 
 function tap(s, r, isY) {
     state.ticks[`${s}-${r}`] = isY ? 'y' : 'n';
     document.getElementById(`y-${s}-${r}`).classList.toggle('active', isY);
     document.getElementById(`n-${s}-${r}`).classList.toggle('active', !isY);
-    
     if(!isY) { 
-        state.activeLoc = {s, r, label: SCHEMA[s].r[r][1]}; 
-        save().then(() => { document.getElementById('cameraInput').click(); });
-    } else {
-        save();
+        localStorage.setItem('pending_photo', JSON.stringify({s, lab: SCHEMA[s].r[r][1]}));
+        document.getElementById('cameraInput').click(); 
     }
+    save();
 }
 
 function manualPhoto(sIdx) { 
-    state.activeLoc = {s: sIdx, label: "Compliance"}; 
-    save().then(() => { document.getElementById('cameraInput').click(); });
+    localStorage.setItem('pending_photo', JSON.stringify({s: sIdx, lab: "Compliance"}));
+    document.getElementById('cameraInput').click(); 
 }
-
-document.getElementById('cameraInput').onchange = function(e) {
-    if(!e.target.files[0]) return;
-    const reader = new FileReader();
-    reader.onload = (f) => {
-        const img = new Image();
-        img.onload = () => {
-            const canv = document.createElement('canvas');
-            const ctx = canv.getContext('2d');
-            const MAX = 800; 
-            let w = img.width, h = img.height;
-            if(w > h) { if(w > MAX){ h *= MAX/w; w = MAX; } }
-            else { if(h > MAX){ w *= MAX/h; h = MAX; } }
-            canv.width = w; canv.height = h;
-            ctx.drawImage(img, 0, 0, w, h);
-            
-            // Use the saved activeLoc to place the photo correctly
-            const sIdx = state.activeLoc ? state.activeLoc.s : 0;
-            const label = state.activeLoc ? state.activeLoc.label : "Photo";
-            
-            state.photos[sIdx].push({src: canv.toDataURL('image/jpeg', 0.6), lab: label});
-            state.activeLoc = null; // Clear context after success
-            renderPhotos(sIdx);
-            save();
-        };
-        img.src = f.target.result;
-    };
-    reader.readAsDataURL(e.target.files[0]);
-};
 
 function renderPhotos(sIdx) {
     const g = document.getElementById(`grid-${sIdx}`);
     if(!g) return;
-    const count = state.photos[sIdx].length;
-    g.classList.toggle('single-photo', count === 1);
-    g.innerHTML = state.photos[sIdx].map((p, pIdx) => `
-        <div class="photo-card">
-            <img src="${p.src}">
-            <div class="photo-label">${p.lab}</div>
-            <button class="btn-reset btn-reset-img" style="width:100%; font-size:8px; margin-top:3px" onclick="removePhoto(${sIdx}, ${pIdx})">REMOVE</button>
-        </div>
-    `).join('');
+    g.classList.toggle('single-photo', state.photos[sIdx].length === 1);
+    g.innerHTML = state.photos[sIdx].map((p, pIdx) => `<div class="photo-card"><img src="${p.src}"><div class="photo-label">${p.lab}</div><button class="btn-reset btn-reset-img" style="width:100%;font-size:8px;margin-top:3px" onclick="removePhoto(${sIdx}, ${pIdx})">REMOVE</button></div>`).join('');
 }
 
-function removePhoto(sIdx, pIdx) {
-    if(confirm("Delete photo?")) { state.photos[sIdx].splice(pIdx, 1); renderPhotos(sIdx); save(); }
-}
-
+function removePhoto(sIdx, pIdx) { if(confirm("Delete?")) { state.photos[sIdx].splice(pIdx,1); renderPhotos(sIdx); save(); } }
 function sync(s,r) { state.notes[`${s}-${r}`] = document.getElementById(`note-${s}-${r}`).value; save(); }
 function syncMain(s) { state.main[s] = document.getElementById(`main-${s}`).value; save(); }
+function save() { localforage.setItem('audit_2026_design_v1', state); }
 
 function move(dir) {
-    state.currentIdx = Math.max(0, Math.min(4, state.currentIdx + dir));
-    save(); 
-    
-    document.querySelectorAll('.audit-section').forEach((s,i) => s.classList.toggle('active', i === state.currentIdx));
-    document.getElementById('nextBtn').style.display = state.currentIdx === 4 ? 'none' : 'block';
-    document.getElementById('shareBtn').style.display = state.currentIdx === 4 ? 'block' : 'none';
+    currentIdx = Math.max(0, Math.min(4, currentIdx + dir));
+    localStorage.setItem('last_idx', currentIdx); // Sync save for index
+    document.querySelectorAll('.audit-section').forEach((s,i) => s.classList.toggle('active', i === currentIdx));
+    document.getElementById('nextBtn').style.display = currentIdx === 4 ? 'none' : 'block';
+    document.getElementById('shareBtn').style.display = currentIdx === 4 ? 'block' : 'none';
     window.scrollTo(0,0);
 }
 
@@ -279,69 +180,42 @@ async function doPDF(force) {
     document.getElementById('overlay').style.display = 'flex';
     const timeStr = new Date().toLocaleString('en-GB', { dateStyle: 'short', timeStyle: 'short' });
     document.querySelectorAll('.dt-target').forEach(el => el.innerText = timeStr);
-
     SCHEMA.forEach((_, s) => {
-        document.getElementById(`mir-main-${s}`).innerText = document.getElementById(`main-${s}`).value || "No additional notes recorded.";
-        const photoSheet = document.getElementById(`photo-sheet-${s}`);
-        photoSheet.style.setProperty('display', state.photos[s].length === 0 ? 'none' : 'flex', 'important');
-
-        SCHEMA[s].r.forEach((__, r) => { 
-            document.getElementById(`mir-${s}-${r}`).innerText = document.getElementById(`note-${s}-${r}`).value; 
-        });
+        document.getElementById(`mir-main-${s}`).innerText = document.getElementById(`main-${s}`).value || "No notes.";
+        document.getElementById(`photo-sheet-${s}`).style.setProperty('display', state.photos[s].length === 0 ? 'none' : 'flex', 'important');
+        SCHEMA[s].r.forEach((__, r) => { document.getElementById(`mir-${s}-${r}`).innerText = document.getElementById(`note-${s}-${r}`).value; });
     });
-
     const el = document.getElementById('app-container');
     el.classList.add('pdf-mode');
-
-    const opt = {
-        margin: 0,
-        filename: `Audit_${Date.now()}.pdf`,
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true, scrollY: 0 },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-    };
-
+    const opt = { margin: 0, filename: `Audit_${Date.now()}.pdf`, image: { type: 'jpeg', quality: 0.95 }, html2canvas: { scale: 2, useCORS: true }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } };
     try {
-        if (!force && navigator.canShare && /Mobi|Android/i.test(navigator.userAgent)) {
+        if (!force && navigator.share) {
             const blob = await html2pdf().set(opt).from(el).output('blob');
             const file = new File([blob], opt.filename, { type: 'application/pdf' });
             await navigator.share({ files: [file], title: 'Store Audit' });
-        } else {
-            await html2pdf().set(opt).from(el).save();
-        }
-    } catch (err) { alert("Download Note: Sharing might be restricted on some mobile browsers. Use 'SAVE PDF' instead."); } 
-    finally {
+        } else { await html2pdf().set(opt).from(el).save(); }
+    } catch (e) { console.log(e); } finally {
         document.querySelectorAll('.photo-sheet').forEach(p => p.style.display = 'flex');
         el.classList.remove('pdf-mode');
         document.getElementById('overlay').style.display = 'none';
     }
 }
 
-function reset() { if(confirm("Wipe all data?")) { localforage.clear().then(() => location.reload()); } }
+function reset() { if(confirm("Reset all?")) { localStorage.clear(); localforage.clear().then(() => location.reload()); } }
 
-// BOOTSTRAP
 build();
+// Use sync localStorage to jump to last index immediately
+currentIdx = parseInt(localStorage.getItem('last_idx') || '0');
 
-localforage.getItem('audit_2026_mty_v2').then(d => {
+localforage.getItem('audit_2026_design_v1').then(d => {
     if(d) {
         state = d;
-        Object.keys(d.ticks).forEach(k => {
-            const [s,r] = k.split('-');
-            const tick = document.getElementById(`${d.ticks[k]}-${s}-${r}`);
-            if(tick) tick.classList.add('active');
-        });
-        Object.keys(d.notes).forEach(k => {
-            const el = document.getElementById(`note-${k}`);
-            if(el) el.value = d.notes[k];
-        });
-        Object.keys(d.main).forEach(k => {
-            const el = document.getElementById(`main-${k}`);
-            if(el) el.value = d.main[k];
-        });
+        Object.keys(d.ticks).forEach(k => { const [s,r] = k.split('-'); const btn = document.getElementById(`${d.ticks[k]}-${s}-${r}`); if(btn) btn.classList.add('active'); });
+        Object.keys(d.notes).forEach(k => { const el = document.getElementById(`note-${k}`); if(el) el.value = d.notes[k]; });
+        Object.keys(d.main).forEach(k => { const el = document.getElementById(`main-${k}`); if(el) el.value = d.main[k]; });
         d.photos.forEach((_,i) => renderPhotos(i));
     }
-    // Initialize to the saved index (or 0 if new)
-    move(0); 
+    move(0);
 });
 </script>
 </body>
