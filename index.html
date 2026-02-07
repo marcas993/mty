@@ -138,7 +138,7 @@
     <div class="launcher-card">
         <div class="launcher-title">Select Audit Type</div>
         <button class="btn-launch btn-did" onclick="selectMode('did')">DID Standard</button>
-        <button class="btn-launch btn-mty" onclick="selectMode('mty')">MTY Trade Ready</button>
+        <button class="btn-launch btn-mty" onclick="selectMode('mty')">MTY Core Compliance</button>
     </div>
 </div>
 
@@ -270,7 +270,7 @@
             document.getElementById('pageTitle').innerText = "DID STANDARD";
         } else {
             sections = DATA_MTY;
-            document.getElementById('pageTitle').innerText = "MTY TRADE READY";
+            document.getElementById('pageTitle').innerText = "MTY CORE COMPLIANCE";
         }
         totalSections = sections.length;
         
@@ -411,36 +411,54 @@
     });
 
     let activeRowInfo = null;
+    
+    // FIX: Optimized Memory Handling for Camera Input
     document.getElementById('cameraInput').addEventListener('change', function(e) {
-        if (!this.files[0] || !activeRowInfo) return;
-        const reader = new FileReader();
-        reader.onload = function(event) {
-            const img = new Image();
-            img.src = event.target.result;
-            img.onload = function() {
-                const canvas = document.createElement('canvas');
-                const maxWidth = 800;
-                let w = img.width, h = img.height;
-                if(w > maxWidth) { h *= maxWidth/w; w = maxWidth; }
-                canvas.width = w; canvas.height = h;
-                canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-                const dataUrl = canvas.toDataURL('image/jpeg', 0.5);
-                const { secIdx, rowIdx } = activeRowInfo;
-                const row = document.querySelectorAll('.audit-section')[secIdx].querySelectorAll('tbody tr')[rowIdx];
-                
-                // Ensure array exists
-                if (!auditData.photos[secIdx]) auditData.photos[secIdx] = [];
-                
-                const count = auditData.photos[secIdx].length + 1;
-                const txtField = row.querySelector('textarea');
-                txtField.value = `[Photo ${count}]\n` + txtField.value;
-                mirrorText(txtField);
-                auditData.notes[`${secIdx}-${rowIdx}`] = txtField.value;
-                auditData.photos[secIdx].push({ src: dataUrl, label: `Photo ${count}: ${row.cells[1].innerText}` });
-                saveState().then(() => { renderPhotos(secIdx); });
-            }
+        const file = this.files[0];
+        if (!file || !activeRowInfo) return;
+
+        // Use URL.createObjectURL to avoid loading massive Base64 string into memory
+        const imgUrl = URL.createObjectURL(file);
+        const img = new Image();
+        img.src = imgUrl;
+
+        img.onload = function() {
+            const canvas = document.createElement('canvas');
+            // Safe Resolution Limit (700px width is enough for PDF)
+            const maxWidth = 700; 
+            let w = img.width, h = img.height;
+            if(w > maxWidth) { h *= maxWidth/w; w = maxWidth; }
+            
+            canvas.width = w; canvas.height = h;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, w, h);
+
+            // Compress to 0.4 quality (approx 50-80kb file)
+            const dataUrl = canvas.toDataURL('image/jpeg', 0.4);
+
+            // CLEANUP: Immediately free memory
+            URL.revokeObjectURL(imgUrl);
+
+            const { secIdx, rowIdx } = activeRowInfo;
+            const row = document.querySelectorAll('.audit-section')[secIdx].querySelectorAll('tbody tr')[rowIdx];
+            
+            if (!auditData.photos[secIdx]) auditData.photos[secIdx] = [];
+            
+            const count = auditData.photos[secIdx].length + 1;
+            const txtField = row.querySelector('textarea');
+            txtField.value = `[Photo ${count}]\n` + txtField.value;
+            mirrorText(txtField);
+            auditData.notes[`${secIdx}-${rowIdx}`] = txtField.value;
+            auditData.photos[secIdx].push({ src: dataUrl, label: `Photo ${count}: ${row.cells[1].innerText}` });
+            
+            saveState().then(() => { renderPhotos(secIdx); });
         };
-        reader.readAsDataURL(this.files[0]);
+        
+        // Handle loading errors
+        img.onerror = function() {
+            URL.revokeObjectURL(imgUrl);
+            alert("Error loading image. Please try again.");
+        };
     });
 
     function renderPhotos(secIdx) {
@@ -501,8 +519,7 @@
         });
 
         const dateStr = new Date().toLocaleDateString('en-GB').replace(/\//g, '-');
-        // FIX: Replaced faulty conditional logic with correct syntax
-        const filename = `${appMode === 'did' ? 'DID_STANDARD' : 'MTY_Trade_Ready'} Check ${dateStr}.pdf`;
+        const filename = `${appMode === 'did' ? 'DID_Standard' : 'MTY_Core_Compliance'} Check ${dateStr}.pdf`;
 
         const opt = {
             margin: 0,
