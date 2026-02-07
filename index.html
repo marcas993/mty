@@ -1,252 +1,553 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Store Audit (©MTY Finglas)</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/localforage/1.10.0/localforage.min.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Audit Launcher ©MTY Finglas</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/localforage/1.10.0/localforage.min.js"></script>
 
-    <style>
-        :root { --primary: #2c3e50; --header-bg: #f2f2f2; --border-color: #d1d1d1; --text-main: #333; --accent: #3498db; --success: #2ecc71; --danger: #e74c3c; }
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { font-family: -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; padding: 0; background: #f0f2f5; color: var(--text-main); font-size: 14px; padding-bottom: 110px; }
-        
-        .app-header { background: var(--primary); color: white; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
-        .btn-header { border: none; padding: 8px 12px; border-radius: 4px; font-size: 11px; font-weight: bold; cursor: pointer; color: white; text-transform: uppercase; }
-        .btn-dl { background: var(--accent); } .btn-reset { background: var(--danger); }
+<style>
+    /* ================= UI STYLES ================= */
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        margin: 0; padding: 0; background: #f4f6f8; font-size: 14px; color: #333;
+        padding-bottom: 120px; overscroll-behavior-y: none;
+    }
 
-        #app-container { width: 100%; max-width: 900px; margin: 0 auto; }
-        .audit-section { display: none; }
-        .audit-section.active { display: block; }
+    /* === LAUNCHER SCREEN === */
+    #launcher {
+        position: fixed; inset: 0; background: #2c3e50; z-index: 20000;
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+        padding: 20px;
+    }
+    .launcher-card {
+        background: white; width: 100%; max-width: 400px; padding: 30px;
+        border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); text-align: center;
+    }
+    .launcher-title { font-size: 22px; font-weight: 800; color: #2c3e50; margin-bottom: 25px; text-transform: uppercase; }
+    .btn-launch {
+        display: block; width: 100%; padding: 15px; margin-bottom: 15px;
+        border: none; border-radius: 8px; font-size: 16px; font-weight: 700; cursor: pointer;
+        transition: transform 0.1s;
+    }
+    .btn-launch:active { transform: scale(0.98); }
+    .btn-did { background: #3498db; color: white; }
+    .btn-mty { background: #27ae60; color: white; }
 
-        .sheet { background: #fff; margin: 10px; padding: 20px; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); display: flex; flex-direction: column; min-height: 85vh; }
-        .header-row { display: flex; justify-content: space-between; margin-bottom: 15px; }
-        h1 { font-size: 16px; margin: 0; font-weight: 700; color: #000; }
+    /* === MAIN APP (Hidden by default) === */
+    #main-app-wrapper { display: none; }
 
-        table { width: 100%; border-collapse: collapse; margin-bottom: 15px; table-layout: fixed; border: 1px solid var(--border-color); }
-        th { background: var(--header-bg); text-align: left; font-size: 9px; padding: 6px; border: 1px solid var(--border-color); text-transform: uppercase; }
-        td { padding: 5px; border: 1px solid var(--border-color); vertical-align: middle; font-size: 11px; }
-        
-        .col-cat { width: 15%; font-weight: bold; } .col-item { width: 45%; } .col-check { width: 10%; text-align: center; } .col-action { width: 20%; }
+    .app-header {
+        background: #2c3e50; color: white; padding: 12px 16px;
+        display: flex; justify-content: space-between; align-items: center;
+        position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+    .app-title { font-size: 16px; font-weight: 700; text-transform: uppercase; }
+    .header-actions { display: flex; gap: 10px; }
+    .btn-header { border: none; padding: 6px 12px; border-radius: 4px; font-size: 11px; font-weight: 600; cursor: pointer; color: white; text-transform: uppercase; }
+    .btn-dl { background: #3498db; } .btn-reset { background: #e74c3c; }
 
-        .choice { width: 32px; height: 32px; border-radius: 4px; border: 1px solid var(--border-color); display: flex; align-items: center; justify-content: center; margin: 0 auto; cursor: pointer; background: #fff; }
-        .choice.yes.active { background: var(--success); border-color: var(--success); color: white; }
-        .choice.no.active { background: var(--danger); border-color: var(--danger); color: white; }
-        .choice.yes.active::after { content: "Y"; font-weight: bold; }
-        .choice.no.active::after { content: "N"; font-weight: bold; }
+    #app-container { width: 100%; max-width: 800px; margin: 0 auto; }
+    .audit-section { display: none; }
+    .audit-section.active { display: block; }
 
-        textarea { width: 100%; min-height: 30px; border: 1px solid var(--border-color); padding: 4px; font-size: 11px; resize: none; }
-        .notes-box { border: 1px solid var(--border-color); padding: 8px; min-height: 80px; margin-top: 5px; border-radius: 4px; }
-        .print-mirror { display: none; white-space: pre-wrap; font-size: 12px; }
+    .sheet { background: #fff; margin: 15px; padding: 15px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); display: flex; flex-direction: column; position: relative; min-height: 80vh; }
+    .header-row { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #ecf0f1; padding-bottom: 10px; margin-bottom: 10px; }
+    h1 { font-size: 18px; margin: 0; color: #2c3e50; font-weight: 800; }
+    .date-time { font-size: 11px; color: #95a5a6; font-weight: 600; }
 
-        .photo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; margin-top: 10px; }
-        .photo-card { border: 1px solid var(--border-color); padding: 4px; text-align: center; background: #fff; }
-        .photo-card img { width: 100%; height: 120px; object-fit: cover; }
-        .photo-label { font-size: 9px; font-weight: bold; margin: 4px 0; display: block; }
+    table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
+    th { text-align: left; font-size: 10px; color: #95a5a6; text-transform: uppercase; border-bottom: 1px solid #eee; padding-bottom: 5px; }
+    td { padding: 12px 2px; border-bottom: 1px solid #f5f6fa; vertical-align: top; }
+    
+    .col-cat { display: none; } 
+    .col-item { width: 50%; font-size: 13px; font-weight: 500; line-height: 1.3; color: #2c3e50; }
+    .col-check { width: 15%; text-align: center; }
+    .col-action { width: 35%; }
 
-        .nav-bar { position: fixed; bottom: 0; left: 0; right: 0; background: #fff; padding: 12px; display: flex; justify-content: space-between; border-top: 1px solid #ddd; z-index: 1000; }
-        .btn-nav { padding: 12px; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; flex: 1; }
-        .btn-prev { background: #eee; color: #333; max-width: 80px; } 
-        .btn-next { background: var(--accent); color: white; margin-left: 10px; } 
-        .btn-share { background: var(--success); color: white; margin-left: 10px; }
+    .choice { width: 40px; height: 40px; border-radius: 8px; border: 2px solid #ecf0f1; display: flex; align-items: center; justify-content: center; margin: 0 auto; background: #fff; }
+    .choice.yes.active { background: #2ecc71; border-color: #2ecc71; }
+    .choice.yes.active::after { content: "✔"; color: white; font-size: 22px; }
+    .choice.no.active { background: #e74c3c; border-color: #e74c3c; }
+    .choice.no.active::after { content: "✖"; color: white; font-size: 22px; }
 
-        #overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); color: white; z-index: 2000; display: none; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px; }
+    textarea { width: 100%; height: 40px; border: 1px solid #dfe6e9; border-radius: 6px; padding: 8px; font-size: 13px; resize: none; font-family: inherit; }
+    .notes-container { margin-top: 15px; background: #f8f9fa; padding: 10px; border-radius: 8px; flex-grow: 1; margin-bottom: 90px; }
+    .notes-box { height: 100px; width: 100%; border: 1px solid #dfe6e9; background: #fff; padding: 8px; white-space: pre-wrap; overflow-y: auto; }
+    
+    .pdf-text-mirror { display: none; }
 
-        .pdf-mode .audit-section { display: block !important; }
-        .pdf-mode .sheet { width: 210mm !important; height: 290mm !important; margin: 0 !important; padding: 10mm !important; page-break-after: always !important; border: none; box-shadow: none; }
-        .pdf-mode textarea, .pdf-mode .btn-add-photo, .pdf-mode .btn-reset-img { display: none !important; }
-        .pdf-mode .print-mirror { display: block !important; }
+    .signatures { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px; }
+    .sig-line { border-bottom: 2px solid #bdc3c7; height: 35px; margin-bottom: 4px; }
+    .sig-text { font-size: 10px; color: #95a5a6; text-transform: uppercase; font-weight: 700; }
 
-        .sig-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: auto; padding-top: 15px; }
-        .sig-item { border-top: 1px solid #000; padding-top: 4px; font-size: 9px; text-transform: uppercase; font-weight: bold; }
-    </style>
+    .photo-sheet { display: none; flex-direction: column; background: #fff; }
+    .photo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 15px; }
+    .photo-card { background: #fff; padding: 4px; border: 1px solid #ecf0f1; border-radius: 6px; text-align: center; }
+    .photo-card img { width: 100%; height: auto; border-radius: 4px; }
+
+    .nav-bar { position: fixed; bottom: 0; left: 0; right: 0; background: #fff; padding: 12px 20px; display: flex; justify-content: space-between; gap: 10px; box-shadow: 0 -4px 20px rgba(0,0,0,0.08); z-index: 99; }
+    .btn { padding: 14px 20px; border: none; border-radius: 8px; font-weight: 700; font-size: 14px; cursor: pointer; flex: 1; }
+    .btn-prev { background: #ecf0f1; color: #7f8c8d; flex: 0 0 80px; }
+    .btn-next { background: #3498db; color: white; }
+    .btn-submit { background: #27ae60; color: white; display: none; width: 100%; }
+
+    #loadingOverlay { position: fixed; inset: 0; background: rgba(255,255,255,0.95); z-index: 10000; display: flex; flex-direction: column; align-items: center; justify-content: center; font-weight: bold; }
+
+    /* ================= PDF MODE ================= */
+    .pdf-mode { width: 195mm !important; margin: 0 auto !important; padding: 0 !important; background: white !important; }
+    .pdf-mode .audit-section { display: block !important; }
+    .pdf-mode .sheet { width: 100% !important; height: 288mm !important; margin: 0 !important; padding: 10mm !important; box-shadow: none !important; border: 1px solid #333 !important; border-radius: 0 !important; page-break-after: always; overflow: hidden; display: block !important; position: relative; }
+    .pdf-mode h1 { font-size: 22px !important; margin-bottom: 5px; }
+    .pdf-mode .date-time { font-size: 12px !important; }
+    .pdf-mode table { margin-bottom: 10px; border: 1px solid #000; table-layout: fixed; }
+    .pdf-mode th { padding: 8px 6px !important; font-size: 11px; border: 1px solid #000; background: #e0e0e0; color: #000; font-weight: 900; }
+    .pdf-mode td { padding: 8px 6px !important; border: 1px solid #000; vertical-align: middle; font-size: 12px !important; line-height: 1.4; height: auto !important; word-wrap: break-word; }
+    .pdf-mode .col-cat { display: table-cell !important; width: 12%; font-weight: 900; text-align: center; font-size: 10px; background: #f2f2f2; }
+    .pdf-mode .col-item { width: 45%; }
+    .pdf-mode .col-check { width: 8%; text-align: center; }
+    .pdf-mode .col-action { width: 35%; }
+    .pdf-mode textarea { display: none !important; }
+    .pdf-mode .pdf-text-mirror { display: block !important; white-space: pre-wrap !important; font-size: 12px; color: #000; line-height: 1.3; }
+    .pdf-mode .choice { width: 100%; height: 16px; border: none; background: transparent !important; } 
+    .pdf-mode .choice.yes.active::after { content: "YES"; font-size: 12px; font-weight: 900; color: #000; }
+    .pdf-mode .choice.no.active::after { content: "NO"; font-size: 12px; font-weight: 900; color: #000; }
+    .pdf-mode .notes-container { margin-top: 10px; padding: 0; background: transparent; border: none; }
+    .pdf-mode .notes-box { height: auto !important; min-height: 150px; border: 1px solid #000 !important; padding: 8px; margin-bottom: 0; }
+    .pdf-mode .signatures { position: absolute; bottom: 10mm; left: 10mm; right: 10mm; margin: 0; border-top: 1px dashed #000; padding-top: 10px; }
+    .pdf-mode .sig-line { height: 30px; border-bottom: 1px solid #000; }
+    .pdf-mode .sig-text { font-size: 11px !important; }
+    .pdf-mode .photo-sheet { display: flex !important; border: none !important; page-break-after: always; height: 288mm !important; padding: 10mm !important; }
+    .pdf-mode .photo-grid { display: grid !important; height: 100%; width: 100%; align-content: start; }
+    .pdf-mode .photo-grid .photo-card img { max-height: 200px; object-fit: contain; }
+    .pdf-mode .photo-grid.p-1 { display: flex !important; align-items: center; justify-content: center; height: 100%; }
+    .pdf-mode .photo-grid.p-1 .photo-card { width: 100%; border: none; }
+    .pdf-mode .photo-grid.p-1 img { max-height: 160mm; width: auto; max-width: 100%; }
+    .pdf-mode .photo-grid.p-2 { display: flex !important; flex-direction: column; justify-content: space-around; height: 100%; }
+    .pdf-mode .photo-grid.p-2 .photo-card { width: 100%; border: none; }
+    .pdf-mode .photo-grid.p-2 img { max-height: 110mm; width: auto; max-width: 100%; }
+    .pdf-mode .app-header, .pdf-mode .nav-bar { display: none !important; }
+</style>
 </head>
+
 <body>
 
-<input type="file" id="cameraInput" accept="image/*" capture="environment" style="display:none">
-
-<div id="overlay">
-    <div style="font-size: 20px; font-weight: bold; margin-bottom: 10px;">WORKING...</div>
-    <div id="status-msg">Optimizing photo for mobile storage...</div>
-</div>
-
-<div class="app-header">
-    <div class="app-title">AUDIT (©MTY)</div>
-    <div class="header-actions">
-        <button class="btn-header btn-dl" onclick="doPDF(true)">SAVE PDF</button>
-        <button class="btn-header btn-reset" onclick="reset()">RESET</button>
+<div id="launcher">
+    <div class="launcher-card">
+        <div class="launcher-title">Select Audit Type</div>
+        <button class="btn-launch btn-did" onclick="selectMode('did')">DID Standard</button>
+        <button class="btn-launch btn-mty" onclick="selectMode('mty')">MTY Trade Ready</button>
     </div>
 </div>
 
-<div id="app-container"></div>
+<input type="file" id="cameraInput" accept="image/*" capture="environment" style="display:none;">
 
-<div class="nav-bar">
-    <button class="btn-nav btn-prev" onclick="move(-1)">BACK</button>
-    <button class="btn-nav btn-next" id="nextBtn" onclick="move(1)">NEXT</button>
-    <button class="btn-nav btn-share" id="shareBtn" style="display:none" onclick="doPDF(false)">FINISH</button>
+<div id="loadingOverlay" style="display:none;"><div id="loadingText">BOOTING AUDIT ENGINE...</div></div>
+
+<div id="main-app-wrapper">
+    <div class="app-header">
+        <div class="app-title" id="pageTitle">AUDIT V13</div>
+        <div class="header-actions">
+            <button class="btn-header btn-reset" onclick="resetForm()">Reset</button>
+        </div>
+    </div>
+
+    <div id="app-container">
+        </div>
+
+    <div class="nav-bar">
+        <button class="btn btn-prev" onclick="changeSection(-1)">Back</button>
+        <button class="btn btn-next" onclick="changeSection(1)">Next</button>
+        <button class="btn btn-submit" id="shareBtn" onclick="handleEmailAction()">Submit & Share</button>
+    </div>
 </div>
 
 <script>
-const SCHEMA = [
-    { t: "Smalls Audit", r: [["PRICE","Price ticket cut straight"],["PRICE","Price ticket right of product"],["PRICE","No broken holders"],["PRICE","Tickets on edge of shelf"],["PRICE","Gun labels top right"],["MERCH","Promo in ticket holder"],["MERCH","Promo in correct position"],["MERCH","Supplier stickers removed"],["MERCH","Smalls in price order"],["MERCH","Stock to height & front"],["MERCH","Boxed stock lined up"],["MERCH","End caps dual displayed"],["CLEAN","Product clean (no dust)"],["CLEAN","Shelves free of dust/gum"],["CLEAN","Barcodes hidden"],["CLEAN","Box product free from dust"],["CLEAN","Floor area vacuumed"]]},
-    { t: "TV & Audio Audit", r: [["PRICE","Price ticket cut straight"],["PRICE","Ticket in correct position"],["PRICE","No broken holders"],["PRICE","Tickets on edge of shelving"],["PRICE","Energy Label Correct Pos"],["PRICE","Energy Label Correct Size"],["MERCH","All Stickers Removed"],["MERCH","Essentials in Place/Priced"],["MERCH","Product Price/Size Logic"],["MERCH","Volume Adjusted Correctly"],["MERCH","TVs On & Playing Content"],["MERCH","TVs out of Eco Mode"],["CLEAN","Shelves Free of Dust"],["CLEAN","TV Stands Free of Dust"],["CLEAN","Cables Neat and Tidy"],["CLEAN","Box Stock Lined Up"],["CLEAN","Floor Cleaned/Vacuumed"]]},
-    { t: "Whites Audit", r: [["FREE","Price ticket cut/pos ok"],["FREE","Energy Label Correct Size"],["FREE","Stickers Removed"],["FREE","Price/Size Logic"],["FREE","Info in Grey Bags"],["INT","Ticket Laminated DL Size"],["INT","Cooling: Label Inside Door"],["INT","Cooking: Label Inside Oven"],["INT","Hobs: Top Right Corner"],["INT","Washers: Label Inside Door"],["INT","Energy Label Laminated"],["INT","Promo Position Correct"],["CLEAN","Product Fully Cleaned"],["CLEAN","Barcodes Hidden"],["CLEAN","Floor Cleaned/Vacuumed"]]},
-    { t: "Digi Audit", r: [["PRICE","Ticket in holder right"],["PRICE","Ticket Cut Straight"],["PRICE","Ticket Correct Position"],["MERCH","Promo in Ticket Holder"],["MERCH","Stickers Removed"],["MERCH","Essentials In Place/Priced"],["MERCH","Digi Tables Neat/Tidy"],["MERCH","Bags out of plastic wrap"],["MERCH","Product Price/Size Logic"],["MERCH","Laptops On/Screensaver"],["MERCH","Monitors Playing Demo"],["CLEAN","Product Cleaned"],["CLEAN","Shelves Free of Dust"],["CLEAN","Barcodes Hidden"],["CLEAN","Floor Cleaned/Vacuumed"]]},
-    { t: "General / BOH Audit", r: [["GEN","Floor Clear of Dirt"],["GEN","Carpet Vacuumed"],["GEN","Windows Cleaned In/Out"],["GEN","Front Entrance Cleaned"],["GEN","Front Mat Hoovered"],["GEN","Bins Emptied"],["GEN","Cash Desk Clean/Tidy"],["BOH","Canteen Clean & Tidy"],["BOH","Toilets Clean & Tidy"],["BOH","Loading Area Clean/Tidy"],["BOH","Customer Collection Current"],["BOH","Open Stock Bubblewrapped"],["BOH","Repair Section Tidy/Current"]]}
-];
+    // ==========================================
+    // 1. DATA DEFINITIONS
+    // ==========================================
 
-let state = { ticks: {}, notes: {}, main: {}, photos: [[],[],[],[],[]] };
-let currentIdx = 0;
+    const DATA_DID = [
+        { id: 0, title: "Smalls Guideline", rows: [
+            ["PRICE", "Price ticket cut straight"], ["PRICE", "Price ticket right of product"], ["PRICE", "No broken holders"], ["PRICE", "Tickets on edge of shelf"], ["PRICE", "Gun labels top right"],
+            ["MERCH", "Promo in ticket holder"], ["MERCH", "Promo in correct position"], ["MERCH", "Supplier stickers removed"], ["MERCH", "Smalls in price order"], ["MERCH", "Stock to height & front"], ["MERCH", "Boxed stock lined up"], ["MERCH", "End caps dual displayed"], ["MERCH", "Essentials in place/priced"],
+            ["HOUSE", "Product clean (no dust)"], ["HOUSE", "Shelves free of dust/gum"], ["HOUSE", "Barcodes hidden"], ["HOUSE", "Box product free from dust"], ["HOUSE", "Floor area vacuumed"]
+        ]},
+        { id: 1, title: "TV & Audio Audit", rows: [
+            ["PRICE", "Price ticket cut straight"], ["PRICE", "Ticket in correct position"], ["PRICE", "No broken holders"], ["PRICE", "Tickets on edge of shelving"], ["PRICE", "Energy Label Correct Pos"], ["PRICE", "Energy Label Correct Size"],
+            ["MERCH", "All stickers removed"], ["MERCH", "Essentials in place/priced"], ["MERCH", "Product Price/Size Logic"], ["MERCH", "Product fully cleaned"], ["MERCH", "Volume adjusted correctly"], ["MERCH", "TVs turned on/same content"], ["MERCH", "TV out of ECO mode"],
+            ["HOUSE", "Shelves free of dust"], ["HOUSE", "TV stands free of dust"], ["HOUSE", "Cables neat and tidy"], ["HOUSE", "Box stock lined up"], ["HOUSE", "Floor cleaned/vacuumed"]
+        ]},
+        { id: 2, title: "Whites Audit", rows: [
+            ["FREE", "Price ticket cut/pos ok"], ["FREE", "Energy Label Correct Size"], ["FREE", "Stickers removed"], ["FREE", "Price/Size logic"], ["FREE", "Info in grey bags"],
+            ["INT", "Ticket laminated DL size"], ["INT", "Cooling: label inside door"], ["INT", "Cooking: label inside oven"], ["INT", "Hobs: top right corner"], ["INT", "Washers: label inside door"], ["INT", "Energy label laminated"], ["INT", "Promo position correct"],
+            ["HOUSE", "Product fully cleaned"], ["HOUSE", "Barcodes hidden"], ["HOUSE", "Floor cleaned/vacuumed"]
+        ]},
+        { id: 3, title: "Digi Audit", rows: [
+            ["PRICE", "Ticket in holder right"], ["PRICE", "Ticket cut straight"], ["PRICE", "Ticket correct position"],
+            ["MERCH", "Promo in ticket holder"], ["MERCH", "Supplier stickers removed"], ["MERCH", "Essentials in place/priced"], ["MERCH", "Digi tables neat/tidy"], ["MERCH", "Bags out of plastic wraps"], ["MERCH", "Product in price/size logic"], ["MERCH", "Laptops on/screensaver"], ["MERCH", "Monitors playing demo"], ["MERCH", "Sleep mode turned off"],
+            ["HOUSE", "Product cleaned"], ["HOUSE", "Shelves free of dust"], ["HOUSE", "Barcodes hidden"], ["HOUSE", "Floor cleaned/vacuumed"]
+        ]},
+        { id: 4, title: "General / BOH Audit", rows: [
+            ["GEN", "Floor clear of dirt"], ["GEN", "Carpet vacuumed"], ["GEN", "Windows cleaned in/out"], ["GEN", "Front entrance cleaned"], ["GEN", "Entrance mat hoovered"], ["GEN", "Bins emptied"], ["GEN", "Cash desk clean/tidy"],
+            ["BOH", "Canteen clean & tidy"], ["BOH", "Toilets clean & tidy"], ["BOH", "Loading area clean/tidy"], ["BOH", "Customer collections current"], ["BOH", "Open stock bubblewrapped"], ["BOH", "Repair section tidy/current"]
+        ]}
+    ];
 
-function build() {
-    const cont = document.getElementById('app-container');
-    SCHEMA.forEach((sec, sIdx) => {
-        let rows = "";
-        sec.r.forEach((r, rIdx) => {
-            rows += `<tr>
-                <td class="col-cat">${r[0]}</td>
-                <td class="col-item">${r[1]}</td>
-                <td class="col-check" onclick="tap(${sIdx},${rIdx},true)"><div id="y-${sIdx}-${rIdx}" class="choice yes"></div></td>
-                <td class="col-check" onclick="tap(${sIdx},${rIdx},false)"><div id="n-${sIdx}-${rIdx}" class="choice no"></div></td>
-                <td class="col-action">
-                    <textarea id="note-${sIdx}-${rIdx}" oninput="sync(${sIdx},${rIdx})"></textarea>
-                    <div class="print-mirror" id="mir-${sIdx}-${rIdx}"></div>
-                </td>
-            </tr>`;
-        });
-        cont.innerHTML += `<div class="audit-section" id="sec-${sIdx}"><div class="sheet"><div class="header-row"><h1>${sec.t}</h1></div><table><thead><tr><th>CAT</th><th>CHECK</th><th>V</th><th>N</th><th>NOTES</th></tr></thead><tbody>${rows}</tbody></table><div class="notes-box"><textarea id="main-${sIdx}" placeholder="Section Notes..." oninput="syncMain(${sIdx})"></textarea><div class="print-mirror" id="mir-main-${sIdx}"></div></div><div class="sig-grid"><div class="sig-item">Staff Sign</div><div class="sig-item">Duty Manager</div><div class="sig-item">Area Manager</div><div class="sig-item">Date</div></div></div><div class="sheet photo-sheet" id="photo-sheet-${sIdx}"><div class="header-row"><h1>${sec.t.split(' ')[0]} Photos</h1></div><button class="btn-add-photo" style="width:100%;padding:15px;background:var(--primary);color:white;border:none;border-radius:4px;font-weight:bold;" onclick="manualPhoto(${sIdx})">📷 ADD PHOTO</button><div class="photo-grid" id="grid-${sIdx}"></div></div></div>`;
-    });
-}
+    const DATA_MTY = [
+        { id: 0, title: "Smalls Guideline", rows: [
+            ["PRICE", "Ticketing Standards (Cut straight, Position correct, Holders intact)"], 
+            ["PRICE", "Pricing Accuracy (Gun labels correct, Edge labels present)"], 
+            ["PRICE", "No Missing Prices (All products priced)"],
+            ["MERCH", "Floor Stacks (Microwaves/Fans/Airfryers) - Stocked, Safe & Priced"],
+            ["MERCH", "Stock Availability (No Gaps, Pulled to front)"],
+            ["MERCH", "End Caps & Display Logic (Dual displayed if applicable)"],
+            ["HOUSE", "Product & Shelves Clean (No Dust, Gum, or Debris)"],
+            ["HOUSE", "Floor Standards (Vacuumed & Clear of hazards)"]
+        ]},
+        { id: 1, title: "TV & Audio Audit", rows: [
+            ["PRICE", "Ticketing Standards (Cut straight, Position correct, Holders intact)"],
+            ["PRICE", "All TVs & Audio Units Priced (No missing tickets)"],
+            ["PRICE", "Energy Label Compliance (Correct Position & Size)"],
+            ["MERCH", "TV Stacks Full & Size Logic Correct"],
+            ["MERCH", "Demo Ready (On, Same Content, Volume leveled, Non-Eco)"],
+            ["MERCH", "Merchandising Standard (Stickers removed, Logic correct)"],
+            ["HOUSE", "Dust Free (Screens, Stands, Shelves)"],
+            ["HOUSE", "Cable Management (Neat, Tidy, Tied back)"]
+        ]},
+        { id: 2, title: "Whites Audit", rows: [
+            ["PRICE", "Ticketing Standards (Cut straight, Position correct, Laminated)"],
+            ["PRICE", "No Missing Prices (All Units on floor priced)"],
+            ["PRICE", "Energy Label Compliance (Inside door or Oven)"],
+            ["MERCH", "Manuals & Extras in Grey Bags"],
+            ["MERCH", "Unit Presentation (Stickers removed, Gaps filled)"],
+            ["HOUSE", "Hobs & Hoods Cleaned (Glass wiped, Buttons clean)"],
+            ["HOUSE", "Freestanding Cookers Cleaned (Inside & Out)"],
+            ["HOUSE", "Laundry Cleaned (No Gummy Marks, Doors wiped)"],
+            ["HOUSE", "Refrigeration Cleaned (Doors & Handles wiped)"],
+            ["HOUSE", "Built-in Ovens Cleaned (Glass polished, Fronts clean)"]
+        ]},
+        { id: 3, title: "Digi Audit", rows: [
+            ["PRICE", "Ticketing Standards (Cut straight, Position correct)"],
+            ["PRICE", "No Missing Prices (Laptops, Tablets, Monitors)"],
+            ["MERCH", "Demo Ready (Laptops ON, Screensavers, No Sleep Mode)"],
+            ["MERCH", "Accessories Standard (Priced, Gun full, Faced off)"],
+            ["MERCH", "Stock Presentation (Bags unwrapped, Logic correct)"],
+            ["HOUSE", "Hygiene (Screens fingerprint-free, Keys dusted)"]
+        ]},
+        { id: 4, title: "General / BOH Audit", rows: [
+            ["MERCH", "Front Bays (Tills): Fully Stocked, Faced off & Priced"],
+            ["MERCH", "Baskets: Full of stock, Faced off & Correct Price"],
+            ["GEN", "Sales Counter: No Stock, No Rubbish, No Personal Items"],
+            ["GEN", "Entrance & Walkways (Mat hoovered, Windows clean)"],
+            ["HOUSE", "All Shop Floor Bins Emptied"],
+            ["HOUSE", "Bays: Clean & No Dirt (Especially Bottom Shelves)"],
+            ["BOH", "Canteen: Clean, Tidy & Bins Emptied"],
+            ["BOH", "Toilets: Male Clean, Stocked & Bins Emptied"],
+            ["BOH", "Toilets: Female Clean, Stocked & Bins Emptied"],
+            ["BOH", "Loading Bay / Goods In (Tidy, Clear)"],
+            ["BOH", "Stock Room / Whse (Organized, Open stock wrapped)"],
+            ["BOH", "Customer Orders (Collections & Repairs Tidy)"]
+        ]}
+    ];
 
-function tap(s, r, isY) {
-    state.ticks[`${s}-${r}`] = isY ? 'y' : 'n';
-    document.getElementById(`y-${s}-${r}`).classList.toggle('active', isY);
-    document.getElementById(`n-${s}-${r}`).classList.toggle('active', !isY);
-    if(!isY) { 
-        localStorage.setItem('mty_pending', JSON.stringify({s, lab: SCHEMA[s].r[r][1]}));
-        document.getElementById('cameraInput').click(); 
+    // ==========================================
+    // 2. STATE & INIT LOGIC
+    // ==========================================
+
+    let currentSection = 0;
+    let sections = []; // Will be loaded with DID or MTY
+    let appMode = ''; // 'did' or 'mty'
+    let totalSections = 0;
+    let auditData = { ticks: {}, notes: {}, mainNotes: {}, photos: [[],[],[],[],[]] };
+
+    function selectMode(mode) {
+        appMode = mode;
+        if (mode === 'did') {
+            sections = DATA_DID;
+            document.getElementById('pageTitle').innerText = "DID STANDARD";
+        } else {
+            sections = DATA_MTY;
+            document.getElementById('pageTitle').innerText = "MTY TRADE READY";
+        }
+        totalSections = sections.length;
+        
+        // Hide Launcher, Show App
+        document.getElementById('launcher').style.display = 'none';
+        document.getElementById('main-app-wrapper').style.display = 'block';
+        
+        // Render UI Structure
+        renderUI();
+        
+        // Boot App logic
+        initApp();
     }
-    save();
-}
 
-function manualPhoto(sIdx) { 
-    localStorage.setItem('mty_pending', JSON.stringify({s: sIdx, lab: "General"}));
-    document.getElementById('cameraInput').click(); 
-}
-
-// THE CORE FIX: Memory-efficient photo processing
-document.getElementById('cameraInput').onchange = function(e) {
-    const file = e.target.files[0];
-    if(!file) return;
-
-    document.getElementById('overlay').style.display = 'flex';
-    const pending = JSON.parse(localStorage.getItem('mty_pending') || '{"s":0, "lab":"Compliance"}');
-    
-    // Use ObjectURL - uses zero memory compared to FileReader
-    const url = URL.createObjectURL(file);
-    const img = new Image();
-    
-    img.onload = () => {
-        const canv = document.createElement('canvas');
-        const ctx = canv.getContext('2d');
-        const MAX = 500; // Ultra-safe resolution
-        let w = img.width, h = img.height;
-        if(w > h) { if(w > MAX){ h *= MAX/w; w = MAX; } } else { if(h > MAX){ w *= MAX/h; h = MAX; } }
-        
-        canv.width = w; canv.height = h;
-        ctx.drawImage(img, 0, 0, w, h);
-        
-        const base64 = canv.toDataURL('image/jpeg', 0.5); // Low quality for speed/memory
-        state.photos[pending.s].push({src: base64, lab: pending.lab});
-        
-        localforage.setItem('mty_photos_v3', state.photos).then(() => {
-            renderPhotos(pending.s);
-            document.getElementById('overlay').style.display = 'none';
-            localStorage.removeItem('mty_pending');
-            URL.revokeObjectURL(url); // Clean memory immediately
+    function renderUI() {
+        let html = '';
+        sections.forEach((sec, idx) => {
+            html += `
+            <div class="audit-section ${idx===0?'active':''}" id="section-${sec.id}">
+                <div class="sheet">
+                    <div class="header-row"><h1>${sec.title}</h1><div class="date-time dt-target"></div></div>
+                    <table>
+                        <thead><tr><th class="col-cat">CAT</th><th class="col-item">CHECKPOINT</th><th class="col-check">Y</th><th class="col-check">N</th><th class="col-action">NOTES</th></tr></thead>
+                        <tbody>`;
+            sec.rows.forEach((row, rIdx) => {
+                html += `
+                    <tr>
+                        <td class="col-cat">${row[0]}</td>
+                        <td class="col-item">${row[1]}</td>
+                        <td class="col-check" onclick="pick(this, true)"><div class="choice yes"></div></td>
+                        <td class="col-check" onclick="pick(this, false)"><div class="choice no"></div></td>
+                        <td class="col-action">
+                            <textarea oninput="mirrorText(this)"></textarea>
+                            <div class="pdf-text-mirror"></div>
+                        </td>
+                    </tr>`;
+            });
+            html += `
+                        </tbody>
+                    </table>
+                    <div class="notes-container">
+                        <strong>NOTES:</strong>
+                        <div class="notes-box-wrapper" style="position:relative;">
+                            <textarea class="notes-box" oninput="mirrorText(this)"></textarea>
+                            <div class="pdf-text-mirror notes-box" style="border:none; padding:0;"></div>
+                        </div>
+                    </div>
+                    <div class="signatures">
+                        <div class="sig-block"><div class="sig-line"></div><div class="sig-text">Staff Sign</div><div class="sig-line" style="margin-top:10px"></div><div class="sig-text">Cluster Mgr</div></div>
+                        <div class="sig-block"><div class="sig-line"></div><div class="sig-text">Duty Mgr</div><div class="sig-line" style="margin-top:10px"></div><div class="sig-text">Date</div></div>
+                    </div>
+                </div>
+                <div class="sheet photo-sheet" id="grid-${sec.id}"><div class="header-row"><h1>${sec.title} Photos</h1><div class="date-time dt-target"></div></div><div class="photo-grid"></div></div>
+            </div>`;
         });
-    };
-    img.src = url;
-};
-
-function renderPhotos(sIdx) {
-    const g = document.getElementById(`grid-${sIdx}`);
-    if(!g) return;
-    g.innerHTML = state.photos[sIdx].map((p, pIdx) => `<div class="photo-card"><img src="${p.src}"><span class="photo-label">${p.lab}</span><button style="width:100%;font-size:10px;" onclick="removePhoto(${sIdx}, ${pIdx})">REMOVE</button></div>`).join('');
-}
-
-function removePhoto(sIdx, pIdx) {
-    if(confirm("Delete?")) { state.photos[sIdx].splice(pIdx, 1); localforage.setItem('mty_photos_v3', state.photos).then(() => renderPhotos(sIdx)); }
-}
-
-function sync(s,r) { state.notes[`${s}-${r}`] = document.getElementById(`note-${s}-${r}`).value; save(); }
-function syncMain(s) { state.main[s] = document.getElementById(`main-${s}`).value; save(); }
-function save() { localStorage.setItem('mty_data_v3', JSON.stringify(state)); }
-
-function move(dir) {
-    currentIdx = Math.max(0, Math.min(4, currentIdx + dir));
-    localStorage.setItem('mty_idx', currentIdx);
-    document.querySelectorAll('.audit-section').forEach((s,i) => s.classList.toggle('active', i === currentIdx));
-    document.getElementById('nextBtn').style.display = currentIdx === 4 ? 'none' : 'block';
-    document.getElementById('shareBtn').style.display = currentIdx === 4 ? 'block' : 'none';
-    window.scrollTo(0,0);
-}
-
-async function doPDF(force) {
-    document.getElementById('overlay').style.display = 'flex';
-    document.getElementById('status-msg').innerText = "Generating PDF Report...";
-    
-    SCHEMA.forEach((_, s) => {
-        document.getElementById(`mir-main-${s}`).innerText = document.getElementById(`main-${s}`).value || "";
-        document.getElementById(`photo-sheet-${s}`).style.setProperty('display', state.photos[s].length === 0 ? 'none' : 'flex', 'important');
-        SCHEMA[s].r.forEach((__, r) => { document.getElementById(`mir-${s}-${r}`).innerText = document.getElementById(`note-${s}-${r}`).value; });
-    });
-
-    const el = document.getElementById('app-container');
-    el.classList.add('pdf-mode');
-    
-    const opt = { margin: 0, filename: 'Audit.pdf', image: { type: 'jpeg', quality: 0.95 }, html2canvas: { scale: 1.5 }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } };
-
-    try {
-        if (!force && navigator.share) {
-            const blob = await html2pdf().set(opt).from(el).output('blob');
-            const file = new File([blob], 'Audit.pdf', { type: 'application/pdf' });
-            await navigator.share({ files: [file], title: 'Store Audit' });
-        } else { await html2pdf().set(opt).from(el).save(); }
-    } finally {
-        el.classList.remove('pdf-mode');
-        document.getElementById('overlay').style.display = 'none';
+        document.getElementById('app-container').innerHTML = html;
     }
-}
 
-function reset() { if(confirm("Wipe all?")) { localStorage.clear(); localforage.clear().then(() => location.reload()); } }
+    async function initApp() {
+        document.getElementById('loadingOverlay').style.display = 'flex';
+        // Unique store per mode prevents data mixing
+        localforage.config({ name: 'AuditApp', storeName: appMode });
+        
+        const savedPos = localStorage.getItem('audit_idx_' + appMode);
+        if(savedPos) currentSection = parseInt(savedPos);
+        
+        const val = await localforage.getItem('auditData');
+        if(val) auditData = val;
+        else auditData = { ticks: {}, notes: {}, mainNotes: {}, photos: [[],[],[],[],[]] }; // Reset if new
 
-build();
+        applyDataToDOM();
+        showSection(currentSection);
+        updateTime();
+        document.getElementById('loadingOverlay').style.display = 'none';
+    }
 
-// Load images first, then UI
-localforage.getItem('mty_photos_v3').then(p => {
-    if(p) state.photos = p;
-    
-    const saved = JSON.parse(localStorage.getItem('mty_data_v3') || '{}');
-    if(saved.ticks) state.ticks = saved.ticks;
-    if(saved.notes) state.notes = saved.notes;
-    if(saved.main) state.main = saved.main;
+    // ==========================================
+    // 3. CORE LOGIC
+    // ==========================================
 
-    // Restore UI
-    Object.keys(state.ticks).forEach(k => {
-        const btn = document.getElementById(`${state.ticks[k]}-${k}`);
-        if(btn) btn.classList.add('active');
+    function mirrorText(el) {
+        const mirror = el.parentElement.querySelector('.pdf-text-mirror');
+        if(mirror) {
+            mirror.innerHTML = el.value.replace(/\n/g, '<br>');
+        }
+    }
+
+    function showSection(idx) {
+        if (idx < 0) idx = 0; if (idx >= totalSections) idx = totalSections - 1;
+        currentSection = idx;
+        localStorage.setItem('audit_idx_' + appMode, idx);
+        document.querySelectorAll('.audit-section').forEach(el => el.classList.remove('active'));
+        document.getElementById(`section-${idx}`).classList.add('active');
+        const pb = document.querySelector('.btn-prev');
+        const nb = document.querySelector('.btn-next');
+        const sb = document.querySelector('.btn-submit');
+        pb.style.visibility = (currentSection === 0) ? 'hidden' : 'visible';
+        if (currentSection === totalSections - 1) { nb.style.display = 'none'; sb.style.display = 'block'; }
+        else { nb.style.display = 'block'; sb.style.display = 'none'; }
+        window.scrollTo(0,0);
+    }
+
+    function changeSection(dir) { showSection(currentSection + dir); }
+
+    function updateTime() {
+        const str = new Date().toLocaleString('en-GB', { dateStyle: 'short', timeStyle: 'short' });
+        document.querySelectorAll('.dt-target').forEach(el => el.innerText = str);
+    }
+
+    async function saveState() { await localforage.setItem('auditData', auditData); }
+
+    function pick(el, isYes) {
+        const row = el.closest("tr");
+        const secIdx = Array.from(document.querySelectorAll('.audit-section')).indexOf(row.closest('.audit-section'));
+        const rowIdx = Array.from(row.parentElement.children).indexOf(row);
+        row.querySelectorAll(".choice").forEach(c => c.classList.remove("active"));
+        el.querySelector(".choice").classList.add("active");
+        auditData.ticks[`${secIdx}-${rowIdx}`] = isYes ? 'yes' : 'no';
+        saveState();
+        if (!isYes) {
+            activeRowInfo = { secIdx, rowIdx };
+            document.getElementById('cameraInput').click();
+        }
+    }
+
+    document.addEventListener('input', (e) => {
+        if(e.target.tagName === 'TEXTAREA') {
+            const sec = e.target.closest('.audit-section');
+            const secIdx = Array.from(document.querySelectorAll('.audit-section')).indexOf(sec);
+            if(e.target.classList.contains('notes-box')) auditData.mainNotes[secIdx] = e.target.value;
+            else {
+                const row = e.target.closest('tr');
+                const rowIdx = Array.from(row.parentElement.children).indexOf(row);
+                auditData.notes[`${secIdx}-${rowIdx}`] = e.target.value;
+            }
+            saveState();
+        }
     });
-    Object.keys(state.notes).forEach(k => { if(document.getElementById(`note-${k}`)) document.getElementById(`note-${k}`).value = state.notes[k]; });
-    Object.keys(state.main).forEach(k => { if(document.getElementById(`main-${k}`)) document.getElementById(`main-${k}`).value = state.main[k]; });
-    state.photos.forEach((_,i) => renderPhotos(i));
 
-    // Restore page
-    currentIdx = parseInt(localStorage.getItem('mty_idx') || '0');
-    move(0);
-});
+    let activeRowInfo = null;
+    document.getElementById('cameraInput').addEventListener('change', function(e) {
+        if (!this.files[0] || !activeRowInfo) return;
+        const reader = new FileReader();
+        reader.onload = function(event) {
+            const img = new Image();
+            img.src = event.target.result;
+            img.onload = function() {
+                const canvas = document.createElement('canvas');
+                const maxWidth = 800;
+                let w = img.width, h = img.height;
+                if(w > maxWidth) { h *= maxWidth/w; w = maxWidth; }
+                canvas.width = w; canvas.height = h;
+                canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+                const dataUrl = canvas.toDataURL('image/jpeg', 0.5);
+                const { secIdx, rowIdx } = activeRowInfo;
+                const row = document.querySelectorAll('.audit-section')[secIdx].querySelectorAll('tbody tr')[rowIdx];
+                
+                // Ensure array exists
+                if (!auditData.photos[secIdx]) auditData.photos[secIdx] = [];
+                
+                const count = auditData.photos[secIdx].length + 1;
+                const txtField = row.querySelector('textarea');
+                txtField.value = `[Photo ${count}]\n` + txtField.value;
+                mirrorText(txtField);
+                auditData.notes[`${secIdx}-${rowIdx}`] = txtField.value;
+                auditData.photos[secIdx].push({ src: dataUrl, label: `Photo ${count}: ${row.cells[1].innerText}` });
+                saveState().then(() => { renderPhotos(secIdx); });
+            }
+        };
+        reader.readAsDataURL(this.files[0]);
+    });
+
+    function renderPhotos(secIdx) {
+        const grid = document.getElementById(`grid-${secIdx}`).querySelector('.photo-grid');
+        grid.innerHTML = '';
+        if(auditData.photos[secIdx]) {
+            auditData.photos[secIdx].forEach(p => {
+                grid.innerHTML += `<div class="photo-card"><img src="${p.src}"><div class="photo-label">${p.label}</div></div>`;
+            });
+        }
+    }
+
+    function applyDataToDOM() {
+        document.querySelectorAll('.audit-section').forEach((sec, secIdx) => {
+            sec.querySelectorAll('tbody tr').forEach((row, rowIdx) => {
+                const tick = auditData.ticks[`${secIdx}-${rowIdx}`];
+                if (tick) row.querySelector('.choice.' + tick).classList.add('active');
+                if (auditData.notes[`${secIdx}-${rowIdx}`]) {
+                    const txt = row.querySelector('textarea');
+                    txt.value = auditData.notes[`${secIdx}-${rowIdx}`];
+                    mirrorText(txt);
+                }
+            });
+            if (auditData.mainNotes[secIdx]) {
+                const txt = sec.querySelector('.notes-box');
+                txt.value = auditData.mainNotes[secIdx];
+                mirrorText(txt);
+            }
+            renderPhotos(secIdx);
+        });
+    }
+
+    function resetForm() { 
+        if(confirm("Delete all data for this audit mode?")) { 
+            localforage.clear().then(() => { 
+                localStorage.removeItem('audit_idx_' + appMode); 
+                location.reload(); 
+            }); 
+        } 
+    }
+
+    async function handleEmailAction() {
+        document.getElementById('loadingOverlay').style.display = 'flex';
+        document.getElementById('loadingText').innerText = "GENERATING PDF...";
+        const container = document.getElementById('app-container');
+        container.classList.add('pdf-mode');
+        
+        document.querySelectorAll('.photo-sheet').forEach((sheet, idx) => {
+            const grid = sheet.querySelector('.photo-grid');
+            const count = (auditData.photos[idx] || []).length;
+            if (count === 0) {
+                sheet.style.display = 'none';
+            } else {
+                sheet.style.display = 'flex';
+                if(count === 1) grid.classList.add('p-1');
+                else if(count === 2) grid.classList.add('p-2');
+            }
+        });
+
+        const dateStr = new Date().toLocaleDateString('en-GB').replace(/\//g, '-');
+        // FIX: Replaced faulty conditional logic with correct syntax
+        const filename = `${appMode === 'did' ? 'DID_STANDARD' : 'MTY_Trade_Ready'} Check ${dateStr}.pdf`;
+
+        const opt = {
+            margin: 0,
+            filename: filename,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 1.8, scrollY: 0, useCORS: true, windowWidth: 794 },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        };
+
+        try {
+            const pdfBlob = await html2pdf().set(opt).from(container).output('blob');
+            
+            container.classList.remove('pdf-mode');
+            document.querySelectorAll('.photo-sheet').forEach((sheet) => {
+                sheet.style.display = 'flex';
+                const grid = sheet.querySelector('.photo-grid');
+                grid.classList.remove('p-1', 'p-2');
+            });
+            showSection(currentSection);
+            document.getElementById('loadingOverlay').style.display = 'none';
+
+            const file = new File([pdfBlob], filename, { type: 'application/pdf' });
+            if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                try {
+                    await navigator.share({
+                        files: [file],
+                        title: 'Audit Report',
+                        text: `Attached is the audit report for ${dateStr}`
+                    });
+                } catch (shareError) {
+                    console.log('Share failed/cancelled, downloading instead');
+                    const url = URL.createObjectURL(pdfBlob);
+                    const a = document.createElement('a'); a.href = url; a.download = filename; a.click();
+                }
+            } else {
+                const url = URL.createObjectURL(pdfBlob);
+                const a = document.createElement('a'); a.href = url; a.download = filename; a.click();
+            }
+
+        } catch (e) { 
+            alert("Error: " + e.message); 
+            container.classList.remove('pdf-mode'); 
+            document.getElementById('loadingOverlay').style.display = 'none'; 
+        }
+    }
 </script>
 </body>
 </html>
-
