@@ -35,6 +35,7 @@
     .btn-launch:active { transform: scale(0.98); }
     .btn-did { background: #3498db; color: white; }
     .btn-mty { background: #27ae60; color: white; }
+    .btn-mtyboh { background: #16a085; color: white; }
     .btn-back { background: #95a5a6; color: white; }
     .launcher-input {
         width: 100%; padding: 14px; margin-bottom: 15px;
@@ -67,14 +68,63 @@
     .dm-target { font-size: 11px; color: #2c3e50; font-weight: 700; margin-top: 2px; }
     .dm-target:empty { display: none; }
 
+    /* === BOH-specific elements === */
+    .boh-banner {
+        background: #fff;
+        border: 3px solid #c0392b;
+        color: #c0392b;
+        text-align: center;
+        padding: 12px;
+        font-size: 14px;
+        font-weight: 900;
+        text-transform: uppercase;
+        margin-bottom: 12px;
+        letter-spacing: 1px;
+        border-radius: 6px;
+    }
+
     table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
     th { text-align: left; font-size: 10px; color: #95a5a6; text-transform: uppercase; border-bottom: 1px solid #eee; padding-bottom: 5px; }
     td { padding: 12px 2px; border-bottom: 1px solid #f5f6fa; vertical-align: top; }
-    
-    .col-cat { display: none; } 
+
+    .col-cat { display: none; }
     .col-item { width: 50%; font-size: 13px; font-weight: 500; line-height: 1.3; color: #2c3e50; }
     .col-check { width: 15%; text-align: center; }
     .col-action { width: 35%; }
+
+    /* Red bold trio */
+    tr.row-red .col-item { color: #c0392b; font-weight: 800; text-decoration: underline; }
+
+    /* Caption row (italic note under the red trio) */
+    tr.row-caption td {
+        background: #fef5e7;
+        font-style: italic;
+        color: #c0392b;
+        font-weight: 600;
+        padding: 8px 10px;
+        text-align: center;
+        font-size: 12px;
+        border-bottom: 1px solid #f5f6fa;
+    }
+
+    /* Subheader row (DUTY MANAGER ONLY divider) */
+    tr.row-subheader td {
+        background: #2c3e50;
+        color: #fff;
+        font-weight: 800;
+        text-transform: uppercase;
+        text-align: center;
+        padding: 12px 10px;
+        font-size: 12px;
+        letter-spacing: 1px;
+        border: none;
+    }
+
+    /* DM-only rows: ticks visible but not clickable, no photo button */
+    tr.row-dmonly .col-check { pointer-events: none; cursor: not-allowed; }
+    tr.row-dmonly .choice { opacity: 0.85; border-color: #bdc3c7; }
+    tr.row-dmonly .btn-add-photo { display: none !important; }
+    tr.row-dmonly .col-item { color: #34495e; }
 
     .choice { width: 40px; height: 40px; border-radius: 8px; border: 2px solid #ecf0f1; display: flex; align-items: center; justify-content: center; margin: 0 auto; background: #fff; }
     .choice.yes.active { background: #2ecc71; border-color: #2ecc71; }
@@ -93,7 +143,7 @@
 
     .notes-container { margin-top: 15px; background: #f8f9fa; padding: 10px; border-radius: 8px; flex-grow: 1; margin-bottom: 90px; }
     .notes-box { height: 100px; width: 100%; border: 1px solid #dfe6e9; background: #fff; padding: 8px; white-space: pre-wrap; overflow-y: auto; }
-    
+
     .pdf-text-mirror { display: none; }
 
     .signatures { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px; }
@@ -121,6 +171,18 @@
     .pdf-mode h1 { font-size: 22px !important; margin-bottom: 5px; }
     .pdf-mode .date-time { font-size: 12px !important; }
     .pdf-mode .dm-target { font-size: 13px !important; color: #000 !important; font-weight: 900 !important; }
+
+    /* PDF: BOH banner big and bold at top of page */
+    .pdf-mode .boh-banner {
+        font-size: 18px !important;
+        padding: 14px !important;
+        border: 4px solid #c0392b !important;
+        margin-bottom: 12px !important;
+        letter-spacing: 2px;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
     .pdf-mode table { margin-bottom: 10px; border: 1px solid #000; table-layout: fixed; }
     .pdf-mode th { padding: 8px 6px !important; font-size: 11px; border: 1px solid #000; background: #e0e0e0; color: #000; font-weight: 900; }
     .pdf-mode td { padding: 8px 6px !important; border: 1px solid #000; vertical-align: middle; font-size: 12px !important; line-height: 1.4; height: auto !important; word-wrap: break-word; }
@@ -128,12 +190,52 @@
     .pdf-mode .col-item { width: 45%; }
     .pdf-mode .col-check { width: 8%; text-align: center; }
     .pdf-mode .col-action { width: 35%; }
+
+    /* PDF: special row types */
+    .pdf-mode tr.row-red .col-item {
+        color: #c0392b !important;
+        font-weight: 900 !important;
+        text-decoration: underline !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+    .pdf-mode tr.row-caption td {
+        background: #fef5e7 !important;
+        color: #c0392b !important;
+        font-style: italic;
+        font-weight: 700;
+        text-align: center;
+        font-size: 11px !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+    .pdf-mode tr.row-subheader td {
+        background: #2c3e50 !important;
+        color: #fff !important;
+        font-weight: 900;
+        text-align: center;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        font-size: 12px !important;
+        padding: 10px !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
     .pdf-mode textarea { display: none !important; }
     .pdf-mode .btn-add-photo { display: none !important; }
     .pdf-mode .pdf-text-mirror { display: block !important; white-space: pre-wrap !important; font-size: 12px; color: #000; line-height: 1.3; }
-    .pdf-mode .choice { width: 100%; height: 16px; border: none; background: transparent !important; } 
+    .pdf-mode .choice { width: 100%; height: 16px; border: none; background: transparent !important; }
     .pdf-mode .choice.yes.active::after { content: "YES"; font-size: 12px; font-weight: 900; color: #000; }
     .pdf-mode .choice.no.active::after { content: "NO"; font-size: 12px; font-weight: 900; color: #000; }
+    /* PDF: DM-only ticks render as empty boxes for pen */
+    .pdf-mode tr.row-dmonly .choice {
+        width: 14px !important;
+        height: 14px !important;
+        border: 1.5px solid #000 !important;
+        margin: 0 auto;
+        background: transparent !important;
+    }
     .pdf-mode .notes-container { margin-top: 10px; padding: 0; background: transparent; border: none; }
     .pdf-mode .notes-box { height: auto !important; min-height: 150px; border: 1px solid #000 !important; padding: 8px; margin-bottom: 0; }
     .pdf-mode .signatures { position: absolute; bottom: 10mm; left: 10mm; right: 10mm; margin: 0; border-top: 1px dashed #000; padding-top: 10px; }
@@ -159,6 +261,7 @@
         <div class="launcher-title">Select Audit Type</div>
         <button class="btn-launch btn-did" onclick="selectMode('did')">DID Standard</button>
         <button class="btn-launch btn-mty" onclick="selectMode('mty')">MTY Core Compliance</button>
+        <button class="btn-launch btn-mtyboh" onclick="selectMode('mtyboh')">MTY Core Compliance + BOH</button>
     </div>
 </div>
 
@@ -168,7 +271,7 @@
 
 <div id="main-app-wrapper">
     <div class="app-header">
-        <div class="app-title" id="pageTitle">AUDIT V14</div>
+        <div class="app-title" id="pageTitle">AUDIT V15</div>
         <div class="header-actions">
             <button class="btn-header btn-reset" onclick="resetForm()">Reset</button>
         </div>
@@ -187,7 +290,6 @@
 <script>
     // ==========================================
     // 1. DATA DEFINITIONS
-    // Order: General, Smalls, TV, Digi, Whites
     // ==========================================
 
     const DATA_DID = [
@@ -233,8 +335,8 @@
             ["BOH", "Customer Orders (Collections & Repairs Tidy)"]
         ]},
         { id: 1, title: "Smalls Guideline", rows: [
-            ["PRICE", "Ticketing Standards (Cut straight, Position correct, Holders intact)"], 
-            ["PRICE", "Pricing Accuracy (Gun labels correct, Edge labels present)"], 
+            ["PRICE", "Ticketing Standards (Cut straight, Position correct, Holders intact)"],
+            ["PRICE", "Pricing Accuracy (Gun labels correct, Edge labels present)"],
             ["PRICE", "No Missing Prices (All products priced)"],
             ["MERCH", "Floor Stacks (Microwaves/Fans/Airfryers) - Stocked, Safe & Priced"],
             ["MERCH", "Stock Availability (No Gaps, Pulled to front)"],
@@ -274,6 +376,47 @@
         ]}
     ];
 
+    // === MTY Core Compliance + BOH ===
+    // BOH section is FIRST. General has 3 BOH items removed and is renamed.
+    const DATA_MTYBOH = [
+        { id: 0, title: "Back of House", banner: "TO BE KEPT IN SEPARATE FOLDER", rows: [
+            ["BOH", "Transfers", "red"],
+            ["BOH", "An Post", "red"],
+            ["BOH", "Customer Collections", "red"],
+            ["", "*To be checked throughout the day and before end of shift", "caption"],
+            ["BOH", "Loading bay clean/tidy, no stock around the lift"],
+            ["BOH", "Stockroom organised / products not mixed up"],
+            ["BOH", "Stock put away in right places"],
+            ["BOH", "No plastic on box stock"],
+            ["BOH", "No empty boxes / rubbish on the floor"],
+            ["", "Duty Manager Only — Completed by COB", "subheader"],
+            ["DM", "Transfers completed and outstanding actioned", "dmonly"],
+            ["DM", "An Post completed and outstanding actioned", "dmonly"],
+            ["DM", "CCS completed and up to date", "dmonly"],
+            ["DM", "Whites organised", "dmonly"],
+            ["DM", "Smalls organised", "dmonly"],
+            ["DM", "Digi accessories organised", "dmonly"],
+            ["DM", "Downstairs clean and tidy", "dmonly"],
+            ["DM", "Upstairs clean and tidy", "dmonly"],
+            ["DM", "No plastic on boxed stock or empty boxes", "dmonly"]
+        ]},
+        { id: 1, title: "General / Front of the Store", rows: [
+            ["MERCH", "Front Bays (Tills): Fully Stocked, Faced off & Priced"],
+            ["MERCH", "Baskets: Full of stock, Faced off & Correct Price"],
+            ["GEN", "Sales Counter: No Stock, No Rubbish, No Personal Items"],
+            ["GEN", "Entrance & Walkways (Mat hoovered, Windows clean)"],
+            ["HOUSE", "All Shop Floor Bins Emptied"],
+            ["HOUSE", "Bays: Clean & No Dirt (Especially Bottom Shelves)"],
+            ["BOH", "Canteen: Clean, Tidy & Bins Emptied"],
+            ["BOH", "Toilets: Male Clean, Stocked & Bins Emptied"],
+            ["BOH", "Toilets: Female Clean, Stocked & Bins Emptied"]
+        ]},
+        { id: 2, title: "Smalls Guideline", rows: DATA_MTY[1].rows },
+        { id: 3, title: "TV & Audio Audit", rows: DATA_MTY[2].rows },
+        { id: 4, title: "Digi Audit", rows: DATA_MTY[3].rows },
+        { id: 5, title: "Whites Audit", rows: DATA_MTY[4].rows }
+    ];
+
     // ==========================================
     // 2. STATE & INIT LOGIC
     // ==========================================
@@ -281,35 +424,46 @@
     let currentSection = 0;
     let sections = [];
     let appMode = '';
+    let pendingMode = '';
     let totalSections = 0;
-    let auditData = { ticks: {}, notes: {}, mainNotes: {}, photos: [[],[],[],[],[]], dutyManager: '' };
+    let auditData = getDefaultData();
+
+    function getDefaultData() {
+        return {
+            ticks: {},
+            notes: {},
+            mainNotes: {},
+            photos: Array.from({ length: totalSections || 6 }, () => []),
+            dutyManager: ''
+        };
+    }
 
     function selectMode(mode) {
-        if (mode === 'mty') {
-            // Show duty manager input step
-            const card = document.getElementById('launcherCard');
-            card.innerHTML = `
-                <div class="launcher-title">Duty Manager</div>
-                <input type="text" id="dutyMgrInput" class="launcher-input" placeholder="Enter Duty Manager Name" autocomplete="off">
-                <button class="btn-launch btn-mty" onclick="confirmMtyMode()">Continue</button>
-                <button class="btn-launch btn-back" onclick="location.reload()">Back</button>
-            `;
-            setTimeout(() => {
-                const inp = document.getElementById('dutyMgrInput');
-                if (inp) inp.focus();
-            }, 100);
-        } else {
+        if (mode === 'did') {
             proceedToMode('did', '');
+            return;
         }
+        // Both MTY modes need a duty manager name
+        pendingMode = mode;
+        const card = document.getElementById('launcherCard');
+        const title = mode === 'mtyboh' ? 'Duty Manager (MTY + BOH)' : 'Duty Manager';
+        const btnClass = mode === 'mtyboh' ? 'btn-mtyboh' : 'btn-mty';
+        card.innerHTML = `
+            <div class="launcher-title">${title}</div>
+            <input type="text" id="dutyMgrInput" class="launcher-input" placeholder="Enter Duty Manager Name" autocomplete="off">
+            <button class="btn-launch ${btnClass}" onclick="confirmMtyMode()">Continue</button>
+            <button class="btn-launch btn-back" onclick="location.reload()">Back</button>
+        `;
+        setTimeout(() => {
+            const inp = document.getElementById('dutyMgrInput');
+            if (inp) inp.focus();
+        }, 100);
     }
 
     function confirmMtyMode() {
         const name = (document.getElementById('dutyMgrInput').value || '').trim();
-        if (!name) {
-            alert('Please enter Duty Manager name');
-            return;
-        }
-        proceedToMode('mty', name);
+        if (!name) { alert('Please enter Duty Manager name'); return; }
+        proceedToMode(pendingMode || 'mty', name);
     }
 
     async function proceedToMode(mode, dutyManager) {
@@ -317,19 +471,21 @@
         if (mode === 'did') {
             sections = DATA_DID;
             document.getElementById('pageTitle').innerText = "DID STANDARD";
+        } else if (mode === 'mtyboh') {
+            sections = DATA_MTYBOH;
+            document.getElementById('pageTitle').innerText = "MTY CORE + BOH";
         } else {
             sections = DATA_MTY;
             document.getElementById('pageTitle').innerText = "MTY CORE COMPLIANCE";
         }
         totalSections = sections.length;
-        
+
         document.getElementById('launcher').style.display = 'none';
         document.getElementById('main-app-wrapper').style.display = 'block';
-        
+
         renderUI();
         await initApp();
-        
-        // After loading existing data, override duty manager if a new one was entered
+
         if (dutyManager) {
             auditData.dutyManager = dutyManager;
             await saveState();
@@ -350,16 +506,36 @@
                             <div class="dm-target"></div>
                         </div>
                     </div>
+                    ${sec.banner ? `<div class="boh-banner">${sec.banner}</div>` : ''}
                     <table>
                         <thead><tr><th class="col-cat">CAT</th><th class="col-item">CHECKPOINT</th><th class="col-check">Y</th><th class="col-check">N</th><th class="col-action">NOTES</th></tr></thead>
                         <tbody>`;
-            sec.rows.forEach((row, rIdx) => {
+            sec.rows.forEach((row) => {
+                const rowType = row[2] || 'normal';
+
+                // Caption row spans all columns
+                if (rowType === 'caption') {
+                    html += `<tr class="row-caption"><td colspan="5">${row[1]}</td></tr>`;
+                    return;
+                }
+                // Subheader row spans all columns
+                if (rowType === 'subheader') {
+                    html += `<tr class="row-subheader"><td colspan="5">${row[1]}</td></tr>`;
+                    return;
+                }
+
+                const trClass =
+                    rowType === 'red' ? 'row-red' :
+                    rowType === 'dmonly' ? 'row-dmonly' : '';
+                const yesClick = rowType === 'dmonly' ? '' : 'onclick="pick(this, true)"';
+                const noClick  = rowType === 'dmonly' ? '' : 'onclick="pick(this, false)"';
+
                 html += `
-                    <tr>
+                    <tr class="${trClass}">
                         <td class="col-cat">${row[0]}</td>
                         <td class="col-item">${row[1]}</td>
-                        <td class="col-check" onclick="pick(this, true)"><div class="choice yes"></div></td>
-                        <td class="col-check" onclick="pick(this, false)"><div class="choice no"></div></td>
+                        <td class="col-check" ${yesClick}><div class="choice yes"></div></td>
+                        <td class="col-check" ${noClick}><div class="choice no"></div></td>
                         <td class="col-action">
                             <textarea oninput="mirrorText(this)"></textarea>
                             <div class="pdf-text-mirror"></div>
@@ -393,13 +569,18 @@
         document.getElementById('loadingOverlay').style.display = 'flex';
         document.getElementById('loadingText').innerText = "BOOTING AUDIT ENGINE...";
         localforage.config({ name: 'AuditApp', storeName: appMode });
-        
+
         const savedPos = localStorage.getItem('audit_idx_' + appMode);
-        if(savedPos) currentSection = parseInt(savedPos);
-        
+        if (savedPos) currentSection = parseInt(savedPos);
+
         const val = await localforage.getItem('auditData');
-        if(val) auditData = Object.assign({ ticks: {}, notes: {}, mainNotes: {}, photos: [[],[],[],[],[]], dutyManager: '' }, val);
-        else auditData = { ticks: {}, notes: {}, mainNotes: {}, photos: [[],[],[],[],[]], dutyManager: '' };
+        if (val) {
+            auditData = Object.assign(getDefaultData(), val);
+            // Make sure photos array length matches current mode's section count
+            while (auditData.photos.length < totalSections) auditData.photos.push([]);
+        } else {
+            auditData = getDefaultData();
+        }
 
         applyDataToDOM();
         showSection(currentSection);
@@ -412,7 +593,6 @@
         document.querySelectorAll('.dm-target').forEach(el => {
             el.innerText = name ? `Duty Mgr: ${name}` : '';
         });
-        // Pre-fill duty mgr signature line
         document.querySelectorAll('.sig-dm').forEach(el => {
             el.innerText = name;
         });
@@ -424,7 +604,7 @@
 
     function mirrorText(el) {
         const mirror = el.parentElement.querySelector('.pdf-text-mirror');
-        if(mirror) {
+        if (mirror) {
             mirror.innerHTML = el.value.replace(/\n/g, '<br>');
         }
     }
@@ -463,6 +643,7 @@
 
     function pick(el, isYes) {
         const row = el.closest("tr");
+        if (row.classList.contains('row-dmonly')) return; // safety: DM-only rows are pen-only
         const secIdx = Array.from(document.querySelectorAll('.audit-section')).indexOf(row.closest('.audit-section'));
         const rowIdx = Array.from(row.parentElement.children).indexOf(row);
         row.querySelectorAll(".choice").forEach(c => c.classList.remove("active"));
@@ -473,15 +654,12 @@
         const photoBtn = row.querySelector('.btn-add-photo');
 
         if (!isYes) {
-            // Show "+ Add Photo" button so user can keep adding pictures
             if (photoBtn) photoBtn.style.display = 'block';
-            // Ask if they want to take a photo right now
             if (confirm("Take a photo for this issue?")) {
                 activeRowInfo = { secIdx, rowIdx };
                 document.getElementById('cameraInput').click();
             }
         } else {
-            // Yes - hide the add photo button
             if (photoBtn) photoBtn.style.display = 'none';
         }
     }
@@ -502,12 +680,14 @@
     }
 
     document.addEventListener('input', (e) => {
-        if(e.target.tagName === 'TEXTAREA') {
+        if (e.target.tagName === 'TEXTAREA') {
             const sec = e.target.closest('.audit-section');
+            if (!sec) return;
             const secIdx = Array.from(document.querySelectorAll('.audit-section')).indexOf(sec);
-            if(e.target.classList.contains('notes-box')) auditData.mainNotes[secIdx] = e.target.value;
+            if (e.target.classList.contains('notes-box')) auditData.mainNotes[secIdx] = e.target.value;
             else {
                 const row = e.target.closest('tr');
+                if (!row) return;
                 const rowIdx = Array.from(row.parentElement.children).indexOf(row);
                 auditData.notes[`${secIdx}-${rowIdx}`] = e.target.value;
             }
@@ -516,12 +696,10 @@
     });
 
     let activeRowInfo = null;
-    
+
     document.getElementById('cameraInput').addEventListener('change', function(e) {
         const file = this.files[0];
-        // Reset input so the same file can be picked again on retake
         this.value = '';
-
         if (!file || !activeRowInfo) return;
 
         const imgUrl = URL.createObjectURL(file);
@@ -530,10 +708,10 @@
 
         img.onload = function() {
             const canvas = document.createElement('canvas');
-            const maxWidth = 700; 
+            const maxWidth = 700;
             let w = img.width, h = img.height;
-            if(w > maxWidth) { h *= maxWidth/w; w = maxWidth; }
-            
+            if (w > maxWidth) { h *= maxWidth/w; w = maxWidth; }
+
             canvas.width = w; canvas.height = h;
             const ctx = canvas.getContext('2d');
             ctx.drawImage(img, 0, 0, w, h);
@@ -542,26 +720,31 @@
 
             const { secIdx, rowIdx } = activeRowInfo;
             const row = document.querySelectorAll('.audit-section')[secIdx].querySelectorAll('tbody tr')[rowIdx];
-            
+            if (!row) return;
+
             if (!auditData.photos[secIdx]) auditData.photos[secIdx] = [];
-            
+
             const count = auditData.photos[secIdx].length + 1;
             const txtField = row.querySelector('textarea');
-            txtField.value = `[Photo ${count}]\n` + txtField.value;
-            mirrorText(txtField);
-            auditData.notes[`${secIdx}-${rowIdx}`] = txtField.value;
+            if (txtField) {
+                txtField.value = `[Photo ${count}]\n` + txtField.value;
+                mirrorText(txtField);
+                auditData.notes[`${secIdx}-${rowIdx}`] = txtField.value;
+            }
+            const itemCell = row.querySelector('.col-item');
+            const label = itemCell ? itemCell.innerText : `Row ${rowIdx}`;
             auditData.photos[secIdx].push({
                 src: dataUrl,
-                label: `Photo ${count}: ${row.cells[1].innerText}`,
+                label: `Photo ${count}: ${label}`,
                 rowIdx: rowIdx
             });
-            
+
             saveState().then(() => {
                 renderPhotos(secIdx);
                 updateRowPhotoCount(row, secIdx, rowIdx);
             });
         };
-        
+
         img.onerror = function() {
             URL.revokeObjectURL(imgUrl);
             alert("Error loading image. Please try again.");
@@ -573,7 +756,7 @@
         if (!sec) return;
         const grid = document.getElementById(`grid-${sec.id}`).querySelector('.photo-grid');
         grid.innerHTML = '';
-        if(auditData.photos[secIdx]) {
+        if (auditData.photos[secIdx]) {
             auditData.photos[secIdx].forEach(p => {
                 grid.innerHTML += `<div class="photo-card"><img src="${p.src}"><div class="photo-label">${p.label}</div></div>`;
             });
@@ -583,9 +766,13 @@
     function applyDataToDOM() {
         document.querySelectorAll('.audit-section').forEach((sec, secIdx) => {
             sec.querySelectorAll('tbody tr').forEach((row, rowIdx) => {
+                // Skip caption/subheader rows (no ticks/notes/photos)
+                if (row.classList.contains('row-caption') || row.classList.contains('row-subheader')) return;
+
                 const tick = auditData.ticks[`${secIdx}-${rowIdx}`];
-                if (tick) {
-                    row.querySelector('.choice.' + tick).classList.add('active');
+                if (tick && !row.classList.contains('row-dmonly')) {
+                    const choice = row.querySelector('.choice.' + tick);
+                    if (choice) choice.classList.add('active');
                     if (tick === 'no') {
                         const btn = row.querySelector('.btn-add-photo');
                         if (btn) btn.style.display = 'block';
@@ -593,27 +780,31 @@
                 }
                 if (auditData.notes[`${secIdx}-${rowIdx}`]) {
                     const txt = row.querySelector('textarea');
-                    txt.value = auditData.notes[`${secIdx}-${rowIdx}`];
-                    mirrorText(txt);
+                    if (txt) {
+                        txt.value = auditData.notes[`${secIdx}-${rowIdx}`];
+                        mirrorText(txt);
+                    }
                 }
                 updateRowPhotoCount(row, secIdx, rowIdx);
             });
             if (auditData.mainNotes[secIdx]) {
                 const txt = sec.querySelector('.notes-box');
-                txt.value = auditData.mainNotes[secIdx];
-                mirrorText(txt);
+                if (txt) {
+                    txt.value = auditData.mainNotes[secIdx];
+                    mirrorText(txt);
+                }
             }
             renderPhotos(secIdx);
         });
     }
 
-    function resetForm() { 
-        if(confirm("Delete all data for this audit mode?")) { 
-            localforage.clear().then(() => { 
-                localStorage.removeItem('audit_idx_' + appMode); 
-                location.reload(); 
-            }); 
-        } 
+    function resetForm() {
+        if (confirm("Delete all data for this audit mode?")) {
+            localforage.clear().then(() => {
+                localStorage.removeItem('audit_idx_' + appMode);
+                location.reload();
+            });
+        }
     }
 
     async function handleEmailAction() {
@@ -621,12 +812,12 @@
         if (submitBtn.disabled) return;
         submitBtn.disabled = true;
 
-        updateTime(); // refresh timestamp at point of submit
+        updateTime();
         document.getElementById('loadingOverlay').style.display = 'flex';
         document.getElementById('loadingText').innerText = "GENERATING PDF...";
         const container = document.getElementById('app-container');
         container.classList.add('pdf-mode');
-        
+
         document.querySelectorAll('.photo-sheet').forEach((sheet, idx) => {
             const grid = sheet.querySelector('.photo-grid');
             const count = (auditData.photos[idx] || []).length;
@@ -635,13 +826,17 @@
             } else {
                 sheet.style.display = 'flex';
                 grid.classList.remove('p-1', 'p-2');
-                if(count === 1) grid.classList.add('p-1');
-                else if(count === 2) grid.classList.add('p-2');
+                if (count === 1) grid.classList.add('p-1');
+                else if (count === 2) grid.classList.add('p-2');
             }
         });
 
         const dateStr = new Date().toLocaleDateString('en-GB').replace(/\//g, '-');
-        const filename = `${appMode === 'did' ? 'DID_Standard' : 'MTY_Core_Compliance'} Check ${dateStr}.pdf`;
+        const modeLabel =
+            appMode === 'did' ? 'DID_Standard' :
+            appMode === 'mtyboh' ? 'MTY_Core_BOH' :
+            'MTY_Core_Compliance';
+        const filename = `${modeLabel} Check ${dateStr}.pdf`;
 
         const opt = {
             margin: 0,
@@ -653,7 +848,7 @@
 
         try {
             const pdfBlob = await html2pdf().set(opt).from(container).output('blob');
-            
+
             container.classList.remove('pdf-mode');
             document.querySelectorAll('.photo-sheet').forEach((sheet) => {
                 sheet.style.display = 'flex';
@@ -681,10 +876,10 @@
                 const a = document.createElement('a'); a.href = url; a.download = filename; a.click();
             }
 
-        } catch (e) { 
-            alert("Error: " + e.message); 
-            container.classList.remove('pdf-mode'); 
-            document.getElementById('loadingOverlay').style.display = 'none'; 
+        } catch (e) {
+            alert("Error: " + e.message);
+            container.classList.remove('pdf-mode');
+            document.getElementById('loadingOverlay').style.display = 'none';
         } finally {
             submitBtn.disabled = false;
         }
